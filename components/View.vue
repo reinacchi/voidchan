@@ -37,16 +37,11 @@ const fileParam = useRoute().params.file as string;
 const { status } = useSession();
 const { data: file } = useFetch(`/raw/${fileParam}`);
 const { data: files } = useFetch(`/api/file/${fileParam.split(".")[0]}`)
-const refreshing = ref(false);
 
 async function refreshPage() {
-  refreshing.value = true;
-
   try {
     await refreshNuxtData();
-  } finally {
-    refreshing.value = false;
-  }
+  } finally {}
 }
 
 function deleteImage() {

@@ -1,4 +1,4 @@
-import { Profile, IProfile } from "../database/models/profile.model";
+import { Profile } from "../database/models/profile.model";
 import { generateString } from "~~/utils/generateString";
 import { getServerSession } from "#auth";
 
