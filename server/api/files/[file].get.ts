@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
   const fileID = getRouterParam(event, "file") as string;
   const file = await Files.findOne({ id: fileID }) as IFiles;
   const session = await getServerSession(event) as any;
+  const uploader = await Profile.findOne({ email: file.uploader }) as IProfile;
 
   if (!file) {
     return {
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event) => {
       ext: mime.getExtension(file.mimetype),
       nsfw: file.nsfw,
       uploader: {
-        name: file.uploader.name,
+        name: uploader.name,
       },
     };
   } else {
@@ -35,7 +36,7 @@ export default defineEventHandler(async (event) => {
       nsfw: file.nsfw,
       uploader: {
         admin: profile.admin,
-        name: file.uploader.name,
+        name: uploader.name,
       },
     };
   }
