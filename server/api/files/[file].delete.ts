@@ -14,8 +14,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const profile = await Profile.findOne({ email: session?.user?.email }) as IProfile;
+  const uploader = await Profile.find({ files: file });
 
   if (profile.admin) {
+    await Profile.findOneAndUpdate({ email: uploader[0].email }, { $pull: { files: file } });
     await Files.findOneAndDelete({ id: file });
   }
 });
