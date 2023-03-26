@@ -21,6 +21,7 @@ export default defineEventHandler(async (event) => {
         authKey,
         date: new Date(),
         email: session?.user?.email,
+        files: [],
         name: session?.user?.name,
       });
     } else return { message: "Account Fetched!", expires: session.expires };

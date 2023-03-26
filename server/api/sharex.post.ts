@@ -26,13 +26,10 @@ export default defineEventHandler(async (event) => {
     buffer: files[0].buffer.toString("base64"),
     mimetype: files[0].mimetype,
     nsfw: false,
-    uploader: {
-      admin: profile.admin,
-      authKey: profile.authKey,
-      name: profile.name,
-      email: profile.email,
-    },
+    uploader: profile.email,
   } as IFiles);
+
+  await Profile.findOneAndUpdate({ email: profile.email }, { $push: { files: name } });
 
   event.node.res.setHeader("Content-Type", "application/json");
 

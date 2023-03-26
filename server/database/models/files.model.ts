@@ -7,7 +7,7 @@ export interface IFiles {
   buffer: string;
   mimetype: string;
   nsfw: boolean;
-  uploader: IProfile;
+  uploader: string;
 }
 
 const filesSchema = new Schema<IFiles>({
@@ -34,22 +34,8 @@ const filesSchema = new Schema<IFiles>({
     required: true,
   },
   uploader: {
-    admin: {
-      type: Schema.Types.Boolean,
-      required: true,
-    },
-    authKey: {
-      type: Schema.Types.String,
-      required: true,
-    },
-    name: {
-      type: Schema.Types.String,
-      required: true,
-    },
-    email: {
-      type: Schema.Types.String,
-      required: true,
-    },
+    type: Schema.Types.String,
+    required: true,
   },
 });
 
