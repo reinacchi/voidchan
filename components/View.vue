@@ -7,8 +7,8 @@
       <br class="noselect" ondragstart="return false" draggable="false">
       <h1 style="margin-top: 15%;" class="text-3xl font-extrabold">{{ fileParam }}</h1>
       <br class="noselect" ondragstart="return false" draggable="false">
-      <img v-if="files?.nsfw" class="nsfw noselect p-5" ondragstart="return false" draggable="false" :src="'http://localhost:3000/raw/' + fileParam" />
-      <img v-else class="noselect p-5" ondragstart="return false" draggable="false" :src="'http://localhost:3000/raw/' + fileParam" />
+      <img v-if="files?.nsfw" class="nsfw noselect p-5" ondragstart="return false" draggable="false" :src="config.BaseURL + '/raw/' + fileParam" />
+      <img v-else class="noselect p-5" ondragstart="return false" draggable="false" :src="config.BaseURL + '/raw/' + fileParam" />
       <p>Uploaded by <b>{{ files?.uploader?.name }}</b> at <b>{{ moment(files?.date).format("D/MM/YY, h:mm:ss A") }}</b></p>
       <br class="noselect" ondragstart="return false" draggable="false">
       <div>
@@ -37,6 +37,7 @@ const fileParam = useRoute().params.file as string;
 const { status } = useSession();
 const { data: file } = useFetch(`/raw/${fileParam}`);
 const { data: files } = useFetch(`/api/files/${fileParam.split(".")[0]}`)
+const config = useRuntimeConfig();
 
 async function refreshPage() {
   try {
@@ -80,11 +81,11 @@ useHead({
     },
     {
       property: "og:url",
-      content: `http://localhost:3000/v/${fileParam}`,
+      content: `${config.BaseURL}/v/${fileParam}`,
     },
     {
       property: "og:image",
-      content: `http://localhost:3000/raw/${fileParam}`,
+      content: `${config.BaseURL}/raw/${fileParam}`,
     },
     {
       property: "theme-color",
