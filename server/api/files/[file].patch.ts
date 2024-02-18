@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const profile = await Profile.findOne({ email: session?.user?.email }) as IProfile;
+  const profile = await Profile.findOne({ name: session?.user?.name }) as IProfile;
 
   if (profile.admin) {
     const body = await readBody(event);

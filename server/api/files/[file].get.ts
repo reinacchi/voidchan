@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const fileID = getRouterParam(event, "file") as string;
   const file = await Files.findOne({ id: fileID }) as IFiles;
   const session = await getServerSession(event) as any;
-  const uploader = await Profile.findOne({ email: file.uploader }) as IProfile;
+  const uploader = await Profile.findOne({ name: file.uploader }) as IProfile;
 
   if (!file) {
     return {
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
       },
     };
   } else {
-    const profile = await Profile.findOne({ email: session.user.email }) as IProfile;
+    const profile = await Profile.findOne({ name: session.user.name }) as IProfile;
 
     return {
       id: file.id,

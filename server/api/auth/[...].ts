@@ -1,22 +1,27 @@
-import DiscordProvider from "next-auth/providers/discord";
+import CredentialsProvider from "next-auth/providers/credentials";
 /* @ts-ignore */
 import { NuxtAuthHandler } from "#auth";
-
-const config = useRuntimeConfig();
-const scopes = ["identify", "email"].join(" ");
+import { Profile } from "~~/server/database/models/profile.model";
 
 export default NuxtAuthHandler({
   secret: "testinglololol",
   providers: [
     /* @ts-ignore */
-    DiscordProvider.default({
-      authorization: {
-        params: {
-          scope: scopes
-        }
+    CredentialsProvider.default({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text", placeholder: "Your Username" },
+        password: { label: "Password", type: "password", placeholder: "Your Password" }
       },
-      clientId: config.ClientID,
-      clientSecret: config.ClientSecret,
+      async authorize(credentials: any, req: any) {
+          const user = await Profile.findOne({ name: credentials.username, password: credentials.password });
+
+          if (user) {
+            return user;
+          } else {
+            return null;
+          }
+      },
     })
   ]
 });

@@ -6,6 +6,7 @@ export interface IProfile {
   date: Date;
   email: string;
   files: string[];
+  password: string;
   name: string;
 }
 
@@ -26,11 +27,15 @@ const profileSchema = new Schema<IProfile>({
   },
   email: {
     type: Schema.Types.String,
-    required: true,
+    required: false,
   },
   files: {
     type: [Schema.Types.String],
     default: [],
+    required: true,
+  },
+  password: {
+    type: Schema.Types.String,
     required: true,
   },
   name: {

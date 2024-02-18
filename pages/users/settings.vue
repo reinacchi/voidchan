@@ -1,0 +1,3 @@
+<template>
+  <UserSettings />
+</template>
