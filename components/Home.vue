@@ -13,12 +13,12 @@
           Hello, <b>{{ data?.user?.name }}</b>.
         </p>
         <br class="noselect" /><br class="noselect" />
-        <nuxt-link to="/dashboard"
+        <nuxt-link :to="'/users/' + data?.user?.name + '/uploads'"
           ><button
             class="btn mx-2 noselect"
-            style="color: #42b893; border-color: #42b893"
+            style="color: #7308ff; border-color: #7308ff"
           >
-            Dashboard
+            My Uploads
           </button></nuxt-link
         >
         <nuxt-link to="/users/settings"
