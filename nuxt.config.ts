@@ -1,5 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  appConfig: {
+    ClientID: process.env.CLIENT_ID,
+    ClientSecret: process.env.CLIENT_SECRET,
+    ClientToken: process.env.CLIENT_TOKEN,
+    PrivateAuth: process.env.PRIVATE_AUTH,
+    MongoDB: process.env.MONGODB_URI,
+  },
   modules: [
     "@nuxtjs/tailwindcss",
     "@huntersofbook/naive-ui-nuxt",
@@ -21,12 +28,12 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     BaseURL: process.env.BASE_URL,
-    Port: process.env.PORT,
     ClientID: process.env.CLIENT_ID,
     ClientSecret: process.env.CLIENT_SECRET,
     ClientToken: process.env.CLIENT_TOKEN,
+    MongoDB: process.env.MONGODB_URI,
+    Port: process.env.PORT,
     Prefix: process.env.PREFIX,
     PrivateAuth: process.env.PRIVATE_AUTH,
-    MongoDB: process.env.MONGODB_URI,
   }
 });

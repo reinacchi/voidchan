@@ -9,6 +9,7 @@ export default defineEventHandler(async (event) => {
   if (event.node.req.headers.authorization === config.PrivateAuth) {
     return {
       admin: profile.admin,
+      auth: profile.authKey,
       createdAt: profile.date,
       email: profile.email,
       name: profile.name,
