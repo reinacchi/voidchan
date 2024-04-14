@@ -7,8 +7,8 @@
       <br class="noselect" ondragstart="return false" draggable="false">
       <h1 style="margin-top: 15%;" class="text-3xl font-extrabold noselect">{{ fileParam }}</h1>
       <br class="noselect" ondragstart="return false" draggable="false">
-      <img v-if="files?.nsfw" class="nsfw noselect p-5" ondragstart="return false" draggable="false" :src="config.BaseURL + '/raw/' + fileParam" />
-      <img v-else class="noselect p-5" ondragstart="return false" draggable="false" :src="config.BaseURL + '/raw/' + fileParam" />
+      <img v-if="files?.nsfw" class="nsfw noselect p-5" ondragstart="return false" draggable="false" :src="files.url" />
+      <img v-else class="noselect p-5" ondragstart="return false" draggable="false" :src="files?.url" />
       <p class="noselect">Uploaded by <b>{{ files?.uploader?.name }}</b> at <b>{{ moment(files?.date).format("D/MM/YY, h:mm:ss A") }}</b></p>
       <br class="noselect" ondragstart="return false" draggable="false">
       <div>
@@ -17,8 +17,8 @@
       </div>
       <br class="noselect" ondragstart="return false" draggable="false">
       <div v-if="status === 'authenticated'">
-        <div v-if="files?.uploader?.admin">
-          <h2 class="text-2xl p-5 font-bold noselect">Admin Area</h2>
+        <div v-if="data?.user?.name === files?.uploader?.name">
+          <h2 class="text-2xl p-5 font-bold noselect">Manage Your File</h2>
           <button class="btn mx-2 noselect" style="border-color: #ad0c00;" @click="deleteImage()"><i class="fas fa-trash-alt"></i> Delete Image</button>
           <button v-if="files?.nsfw" class="btn mx-2 noselect" style="border-color: #d8e43a;" @click="markNSFW(false)"><i class="fas fa-ban"></i> Mark as non-NSFW</button>
           <button v-else class="btn mx-2 noselect" style="border-color: #d8e43a;" @click="markNSFW(true)"><i class="fas fa-ban"></i> Mark as NSFW</button>
@@ -34,7 +34,7 @@
 import moment from "moment";
 
 const fileParam = useRoute().params.file as string;
-const { status } = useSession();
+const { data, status } = useSession();
 const { data: file } = useFetch(`/raw/${fileParam}`);
 const { data: files } = useFetch(`/api/files/${fileParam.split(".")[0]}`)
 const config = useRuntimeConfig();

@@ -4,6 +4,7 @@ import mime from "mime";
 import { getServerSession } from "#auth";
 
 export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig();
   const fileID = getRouterParam(event, "file") as string;
   const file = await Files.findOne({ id: fileID }) as IFiles;
   const session = await getServerSession(event) as any;
@@ -25,6 +26,7 @@ export default defineEventHandler(async (event) => {
       uploader: {
         name: uploader.name,
       },
+      url: `${config.BaseURL}/raw/${file.id}.${mime.getExtension(file.mimetype)}`,
     };
   } else {
     const profile = await Profile.findOne({ name: session.user.name }) as IProfile;
@@ -38,6 +40,7 @@ export default defineEventHandler(async (event) => {
         admin: profile.admin,
         name: uploader.name,
       },
+      url: `${config.BaseURL}/raw/${file.id}.${mime.getExtension(file.mimetype)}`,
     };
   }
 
