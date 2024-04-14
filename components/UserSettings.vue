@@ -13,7 +13,7 @@
               New Password
             </label>
             <input
-              class="shadow bg-neutral-900 border-neutral-500 appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline noselect"
+              class="shadow bg-violet-900 bg-opacity-10 border-violet-900 border-opacity-60 appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline noselect"
               v-model="password"
               type="password"
               placeholder="Password"
@@ -39,12 +39,6 @@ const copiedAuth = ref(false);
 const resetAuth = ref(false);
 const newKey = ref<string | undefined>(undefined);
 const { data } = useSession();
-const { data: userProfile } = useFetch(`/api/users/${data.value?.user?.name}`, {
-  method: "GET",
-  headers: {
-    authorization: config.PrivateAuth,
-  }
-});
 
 function resetKey() {
   newKey.value = generateString(32);
@@ -91,7 +85,7 @@ function copyAuth() {
     }
   });
 
-  navigator.clipboard.writeText(newKey.value !== undefined ? newKey.value : key.value.auth).then(() => {
+  navigator.clipboard.writeText(newKey.value !== undefined ? newKey.value : (key.value as any)?.auth).then(() => {
     copiedAuth.value = true;
 
     setTimeout(() => {
