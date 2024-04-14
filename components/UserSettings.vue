@@ -25,7 +25,7 @@
           <div class="w-full max-w-sm shadow-md rounded px-8 pt-6 pb-8 mb-8 noselect">
             <label class="block text-lg font-bold mb-3 noselect">Authentiation Key</label>
             <button @click="copyAuth" class="btn mx-2">{{ copiedAuth ? "Copied to Clipboard!" : "Copy Key" }}</button>
-            <button style="border-color: #ad0c00;" class="btn mx-2">Reset Key</button>
+            <button @click="resetKey" style="border-color: #ad0c00;" class="btn mx-2">{{ resetAuth ? "Key Reset!" : "Reset Key" }}</button>
           </div>
           <button class="btn mx-2 noselect" @click.prevent="$router.go(-1)">Back</button>
     </center>
@@ -36,6 +36,8 @@
 const config = useAppConfig();
 const password = ref(undefined);
 const copiedAuth = ref(false);
+const resetAuth = ref(false);
+const newKey = ref<string | undefined>(undefined);
 const { data } = useSession();
 const { data: userProfile } = useFetch(`/api/users/${data.value?.user?.name}`, {
   method: "GET",
@@ -44,6 +46,25 @@ const { data: userProfile } = useFetch(`/api/users/${data.value?.user?.name}`, {
   }
 });
 
+function resetKey() {
+  newKey.value = generateString(32);
+
+  resetAuth.value = true;
+  $fetch(`/api/users/${data.value?.user?.name}`, {
+    method: "PATCH",
+    headers: {
+      authorization: config.PrivateAuth,
+    },
+    body: JSON.stringify({
+      authKey: newKey.value,
+    }),
+  });
+
+  setTimeout(() => {
+    resetAuth.value = false;
+  }, 1500);
+}
+
 function updateSettings() {
   if (password.value === undefined) {
     return;
@@ -51,6 +72,9 @@ function updateSettings() {
 
   $fetch(`/api/users/${data.value?.user?.name}`, {
     method: "PATCH",
+    headers: {
+      authorization: config.PrivateAuth,
+    },
     body: JSON.stringify({
       password: password.value
     })
@@ -60,7 +84,14 @@ function updateSettings() {
 }
 
 function copyAuth() {
-  navigator.clipboard.writeText(userProfile.value.auth).then(() => {
+  const { data: key } = useFetch(`/api/users/${data.value?.user?.name}`, {
+    method: "GET",
+    headers: {
+      authorization: config.PrivateAuth,
+    }
+  });
+
+  navigator.clipboard.writeText(newKey.value !== undefined ? newKey.value : key.value.auth).then(() => {
     copiedAuth.value = true;
 
     setTimeout(() => {
