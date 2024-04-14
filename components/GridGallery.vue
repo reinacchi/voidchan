@@ -1,5 +1,5 @@
 <template>
-<div class="gallery-view noselect" v-for="file in files?.reverse()" :key="file.id">
+<div class="gallery-view noselect" v-for="file in files?.reverse()" :key="file.date.toString()">
   <nuxt-link v-if="file.nsfw" :href="'/v/' + file.id + '.' + file.ext"><img style="cursor: pointer;" class="nsfw" :src="file.url" draggable="false" alt=""></nuxt-link>
   <nuxt-link v-else :href="'/v/' + file.id + '.' + file.ext"><img style="cursor: pointer;" :src="file.url" draggable="false" alt=""></nuxt-link>
 </div>
@@ -7,7 +7,9 @@
 
 <script setup lang="ts">
 const user = useRoute().params.user;
-const { data: files } = useFetch(`/api/users/${user}/files`);
+const { data: files } = useLazyFetch(`/api/users/${user}/files`);
+
+
 </script>
 
 <style scoped>

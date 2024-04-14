@@ -44,7 +44,7 @@ function resetKey() {
   newKey.value = generateString(32);
 
   resetAuth.value = true;
-  $fetch(`/api/users/${data.value?.user?.name}`, {
+  useLazyFetch(`/api/users/${data.value?.user?.name}`, {
     method: "PATCH",
     headers: {
       authorization: config.PrivateAuth,
@@ -64,7 +64,7 @@ function updateSettings() {
     return;
   }
 
-  $fetch(`/api/users/${data.value?.user?.name}`, {
+  useLazyFetch(`/api/users/${data.value?.user?.name}`, {
     method: "PATCH",
     headers: {
       authorization: config.PrivateAuth,
@@ -78,7 +78,7 @@ function updateSettings() {
 }
 
 function copyAuth() {
-  const { data: key } = useFetch(`/api/users/${data.value?.user?.name}`, {
+  const { data: key } = useLazyFetch(`/api/users/${data.value?.user?.name}`, {
     method: "GET",
     headers: {
       authorization: config.PrivateAuth,

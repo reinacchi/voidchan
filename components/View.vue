@@ -35,8 +35,8 @@ import moment from "moment";
 
 const fileParam = useRoute().params.file as string;
 const { data, status } = useSession();
-const { data: file } = useFetch(`/raw/${fileParam}`);
-const { data: files } = useFetch(`/api/files/${fileParam.split(".")[0]}`)
+const { data: file } = useLazyFetch(`/raw/${fileParam}`);
+const { data: files } = useLazyFetch(`/api/files/${fileParam.split(".")[0]}`)
 const config = useRuntimeConfig();
 
 async function refreshPage() {
@@ -46,7 +46,7 @@ async function refreshPage() {
 }
 
 function deleteImage() {
-  $fetch(`/api/files/${fileParam.split(".")[0]}`, {
+  useLazyFetch(`/api/files/${fileParam.split(".")[0]}`, {
     method: "DELETE",
   });
 
@@ -58,7 +58,7 @@ function downloadImage() {
 }
 
 function markNSFW(val: boolean) {
-  $fetch(`/api/files/${fileParam.split(".")[0]}`, {
+  useLazyFetch(`/api/files/${fileParam.split(".")[0]}`, {
     method: "PATCH",
     body: JSON.stringify({
       nsfw: val,
