@@ -24,8 +24,8 @@
           </div>
           <div class="w-full max-w-sm shadow-md rounded px-8 pt-6 pb-8 mb-8 noselect">
             <label class="block text-lg font-bold mb-3 noselect">Authentiation Key</label>
-            <button @click="copyAuth" class="btn mx-2">{{ copiedAuth ? "Copied to Clipboard!" : "Copy Key" }}</button>
-            <button @click="resetKey" style="border-color: #ad0c00;" class="btn mx-2">{{ resetAuth ? "Key Reset!" : "Reset Key" }}</button>
+            <button @click="copyAuth" class="btn mx-2"><span class="far fa-clipboard"></span> {{ copiedAuth ? "Key Copied!" : "Copy Key" }}</button>
+            <button @click="resetKey" style="border-color: #ad0c00;" class="btn mx-2"><span class="fas fa-exclamation-triangle"></span> {{ resetAuth ? "Key Reset!" : "Reset Key" }}</button>
           </div>
           <button class="btn mx-2 noselect" @click.prevent="$router.go(-1)">Back</button>
     </center>
