@@ -7,6 +7,13 @@ body {
   text-align: center;
 }
 
+code {
+  background: #070707;
+  padding: 2px 5px;
+  border: 1px solid #55515a;
+  color: #ff3d5d;
+}
+
 .centered {
   display: flex;
   flex-direction: column;
