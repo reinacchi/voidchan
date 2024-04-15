@@ -85,7 +85,9 @@ function copyAuth() {
     }
   });
 
-  navigator.clipboard.writeText(newKey.value !== undefined ? newKey.value : (key.value as any)?.auth).then(() => {
+  if (newKey.value === undefined) newKey.value = (key.value as any).auth;
+
+  navigator.clipboard.writeText(newKey.value as string).then(() => {
     copiedAuth.value = true;
 
     setTimeout(() => {
