@@ -7,8 +7,10 @@
       <br class="noselect" ondragstart="return false" draggable="false">
       <h1 style="margin-top: 15%;" class="text-3xl font-extrabold noselect">{{ fileParam }}</h1>
       <br class="noselect" ondragstart="return false" draggable="false">
-      <img v-if="files?.nsfw" class="nsfw noselect p-5" ondragstart="return false" draggable="false" :src="files.url" />
-      <img v-else class="noselect p-5" ondragstart="return false" draggable="false" :src="files?.url" />
+      <div class="image-view">
+        <img v-if="files?.nsfw" class="nsfw noselect" ondragstart="return false" draggable="false" :src="files.url" />
+        <img v-else class="noselect" ondragstart="return false" draggable="false" :src="files?.url" />
+      </div>
       <p class="noselect">Uploaded by <b>{{ files?.uploader?.name }}</b> at <b>{{ moment(files?.date).format("D/MM/YY, h:mm:ss A") }}</b></p>
       <br class="noselect" ondragstart="return false" draggable="false">
       <div>
@@ -98,3 +100,22 @@ useHead({
   ],
 });
 </script>
+
+<style scoped>
+.image-view {
+  max-width: 100%;
+  border: none !important;
+  box-shadow: 0 0 4px 2px rgb(60, 27, 109);
+  margin: 20px;
+  display: flex;
+  display: inline-block;
+  transition: all cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s;
+}
+
+.image-view img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  vertical-align: auto;
+}
+</style>
