@@ -4,14 +4,15 @@
     <br class="noselect">
     <center>
       <div class="w-full max-w-xs">
-        <form class="shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <form class="shadow border border-violet-900 border-opacity-60 rounded-2xl px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
             <label
-              class="block text-lg font-bold mb-3 noselect"
+              class="block text-2xl font-bold mb-3 noselect"
               for="password"
             >
               New Password
             </label>
+            <p class="text-sm mb-5">Change your old password with a new one if you forget yours.</p>
             <input
               class="shadow bg-violet-900 bg-opacity-10 border-violet-900 border-opacity-60 appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline noselect"
               v-model="password"
@@ -22,8 +23,9 @@
           <button class="btn mx-2 noselect" @click.prevent="updateSettings">Update</button>
           </form>
           </div>
-          <div class="w-full max-w-sm shadow-md rounded px-8 pt-6 pb-8 mb-8 noselect">
-            <label class="block text-lg font-bold mb-3 noselect">Authentiation Key</label>
+          <div class="w-full max-w-sm shadow border border- border-violet-900 border-opacity-60 rounded-2xl px-8 pt-6 pb-8 mb-4">
+            <label class="block text-2xl font-bold mb-2 noselect">Autentication Key</label>
+            <p class="mb-5 text-sm">Your authentication key is utilised for accessing VoidChan's ShareX uploader. <br><b>Keep your key confidential! Use the "Reset Key" to reset your authentication key.</b></p>
             <button @click="copyAuth" class="btn mx-2"><span class="far fa-clipboard"></span> {{ copiedAuth ? "Key Copied!" : "Copy Key" }}</button>
             <button @click="resetKey" style="border-color: #ad0c00;" class="btn mx-2"><span class="fas fa-exclamation-triangle"></span> {{ resetAuth ? "Key Reset!" : "Reset Key" }}</button>
           </div>
