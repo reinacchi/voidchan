@@ -1,7 +1,8 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 /* @ts-ignore */
 import { NuxtAuthHandler } from "#auth";
-import { Profile } from "~~/server/database/models/profile.model";
+import { IProfile, Profile } from "~~/server/database/models/profile.model";
+import bcrypt from "bcryptjs";
 
 export default NuxtAuthHandler({
   secret: "testinglololol",
@@ -10,18 +11,37 @@ export default NuxtAuthHandler({
     CredentialsProvider.default({
       name: "Credentials",
       credentials: {
-        username: { label: "Username", type: "text", placeholder: "Your Username" },
-        password: { label: "Password", type: "password", placeholder: "Your Password" }
+        username: {
+          label: "Username",
+          type: "text",
+          placeholder: "Your Username",
+        },
+        password: {
+          label: "Password",
+          type: "password",
+          placeholder: "Your Password",
+        },
       },
       async authorize(credentials: any, req: any) {
-          const user = await Profile.findOne({ name: credentials.username, password: credentials.password });
+        const userToCheck = (await Profile.findOne({
+          name: credentials.username,
+        })) as IProfile;
 
-          if (user) {
-            return user;
-          } else {
-            return null;
-          }
+        if (!userToCheck) return null;
+
+        const pass = bcrypt.compareSync(
+          credentials.password,
+          userToCheck.password
+        );
+
+        if (!pass) return null;
+
+        if (userToCheck) {
+          return userToCheck;
+        } else {
+          return null;
+        }
       },
-    })
-  ]
+    }),
+  ],
 });

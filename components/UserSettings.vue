@@ -72,7 +72,7 @@ function updateSettings() {
       authorization: config.PrivateAuth,
     },
     body: JSON.stringify({
-      password: password.value
+      password: generatePassword(password.value as string),
     })
   });
 
