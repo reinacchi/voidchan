@@ -1,14 +1,10 @@
 <template>
   <div class="centered">
     <h1 class="text-2xl p-5 noselect">
-      <span class="font-extrabold">VoidChan</span> - A ShareX-Powered
-      Multi-Format CDN
+      <span class="font-extrabold">VoidChan</span>
     </h1>
     <div>
-      <div v-if="status === 'unauthenticated'">
-        <button class="btn mx-2 noselect" @click="signIn()">Login</button>
-      </div>
-      <div v-else-if="status === 'authenticated'">
+      <div v-if="status === 'authenticated'">
         <p class="noselect">
           Hello, <b>{{ data?.user?.name }}</b>.
         </p>
@@ -29,9 +25,6 @@
             Settings
           </button></nuxt-link
         >
-        <button class="btn mx-2 noselect" @click="signOut({ callbackUrl: '/' })">
-          Logout
-        </button>
       </div>
     </div>
   </div>
