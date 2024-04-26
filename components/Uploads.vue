@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-const { data } = useSession();
+const { data } = useAuth();
 
 useHead({
   title: "Uploads | VoidChan"

@@ -40,7 +40,7 @@ const password = ref(undefined);
 const copiedAuth = ref(false);
 const resetAuth = ref(false);
 const newKey = ref<string | undefined>(undefined);
-const { data } = useSession();
+const { data } = useAuth();
 
 function resetKey() {
   newKey.value = generateString(32);

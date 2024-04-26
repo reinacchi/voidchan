@@ -18,7 +18,7 @@
       {
         name: "description",
         content:
-          "VoidChan is a ShareX-powered multi-format CDN. Upload your files and share them with your friends.",
+          "VoidChan is an extensive collection of images. Upload your files and share them with your friends.",
       },
       {
         name: "keywords",

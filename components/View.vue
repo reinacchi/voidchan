@@ -36,7 +36,7 @@
 import moment from "moment";
 
 const fileParam = useRoute().params.file as string;
-const { data, status } = useSession();
+const { data, status } = useAuth();
 const { data: file } = useFetch(`/raw/${fileParam}`);
 const { data: files } = await useAsyncData("files", () => $fetch(`/api/files/${fileParam.split(".")[0]}`));
 const config = useRuntimeConfig();

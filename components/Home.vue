@@ -32,6 +32,6 @@
 
 <script setup lang="ts">
 /* @ts-ignore */
-const { data, status, signIn, signOut } = useSession();
+const { data, status, signIn, signOut } = useAuth();
 
 </script>

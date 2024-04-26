@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 const isOpen = ref(false);
-const { data, status, signIn, signOut } = useSession();
+const { data, status, signIn, signOut } = useAuth();
 
 function toggleMenu() {
   isOpen.value = !isOpen.value;
