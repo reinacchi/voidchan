@@ -1,35 +1,35 @@
 <template>
-  <div>
-    <h1 class="text-5xl m-5 noselect">Settings</h1>
-    <br class="noselect">
+  <div class="noselect">
+    <h1 class="text-5xl m-5">Settings</h1>
+    <br class="">
     <center>
       <div class="w-full max-w-xs">
         <form class="shadow border border-violet-900 border-opacity-60 rounded-2xl px-8 pt-6 pb-8 mb-4">
           <div class="mb-4">
             <label
-              class="block text-2xl font-bold mb-3 noselect"
+              class="block text-2xl font-bold mb-3"
               for="password"
             >
               New Password
             </label>
-            <p class="text-sm mb-5">Change your old password with a new one if you forget yours.</p>
+            <p class="text-sm mb-5">Change your old password with a new one if you have forgotten yours.</p>
             <input
-              class="shadow bg-violet-900 bg-opacity-10 border-violet-900 border-opacity-60 appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline noselect"
+              class="shadow bg-violet-900 bg-opacity-10 border-violet-900 border-opacity-60 appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
               v-model="password"
               type="password"
               placeholder="Password"
             />
           </div>
-          <button class="btn mx-2 noselect" @click.prevent="updateSettings">Update</button>
+          <button class="btn mx-2" @click.prevent="updateSettings">Update</button>
           </form>
           </div>
           <div class="w-full max-w-sm shadow border border- border-violet-900 border-opacity-60 rounded-2xl px-8 pt-6 pb-8 mb-4">
-            <label class="block text-2xl font-bold mb-2 noselect">Autentication Key</label>
+            <label class="block text-2xl font-bold mb-2">Authentication Key</label>
             <p class="mb-5 text-sm">Your authentication key is utilised for accessing VoidChan's ShareX uploader. <br><b>Keep your key confidential! Use the "Reset Key" to reset your authentication key.</b></p>
             <button @click="copyAuth" class="btn mx-2"><span class="far fa-clipboard"></span> {{ copiedAuth ? "Key Copied!" : "Copy Key" }}</button>
             <button @click="resetKey" style="border-color: #ad0c00;" class="btn mx-2"><span class="fas fa-exclamation-triangle"></span> {{ resetAuth ? "Key Reset!" : "Reset Key" }}</button>
           </div>
-          <button class="btn mx-2 noselect" @click.prevent="$router.go(-1)">Back</button>
+          <button class="btn mx-2" @click.prevent="$router.go(-1)">Back</button>
     </center>
   </div>
 </template>
@@ -46,7 +46,7 @@ function resetKey() {
   newKey.value = generateString(32);
 
   resetAuth.value = true;
-  useLazyFetch(`/api/users/${data.value?.user?.name}`, {
+  useFetch(`/api/users/${data.value?.user?.name}`, {
     method: "PATCH",
     headers: {
       authorization: config.PrivateAuth,
@@ -66,7 +66,7 @@ function updateSettings() {
     return;
   }
 
-  useLazyFetch(`/api/users/${data.value?.user?.name}`, {
+  useFetch(`/api/users/${data.value?.user?.name}`, {
     method: "PATCH",
     headers: {
       authorization: config.PrivateAuth,
@@ -80,7 +80,7 @@ function updateSettings() {
 }
 
 function copyAuth() {
-  const { data: key } = useLazyFetch(`/api/users/${data.value?.user?.name}`, {
+  const { data: key } = useFetch(`/api/users/${data.value?.user?.name}`, {
     method: "GET",
     headers: {
       authorization: config.PrivateAuth,
@@ -97,4 +97,8 @@ function copyAuth() {
     }, 1500)
   })
 }
+
+useHead({
+  title: "Settings | VoidChan"
+})
 </script>

@@ -2,14 +2,14 @@
   <div v-if="file?.code === 404">
     <NotFound />
   </div>
-  <div v-else class="centered" style="padding: 0 0.5rem">
+  <div v-else>
     <div class="flex flex-col items-center justify-center">
       <br class="noselect" ondragstart="return false" draggable="false">
-      <h1 style="margin-top: 15%;" class="text-3xl font-extrabold noselect">{{ fileParam }}</h1>
+      <h1 style="margin-top: 5%;" class="text-3xl font-extrabold noselect">{{ fileParam }}</h1>
       <br class="noselect" ondragstart="return false" draggable="false">
       <div class="image-view">
-        <img v-if="files?.nsfw" class="nsfw noselect" ondragstart="return false" draggable="false" :src="files.url" />
-        <img v-else class="noselect" ondragstart="return false" draggable="false" :src="files?.url" />
+        <Image v-if="files?.nsfw" class="nsfw noselect" ondragstart="return false" draggable="false" :src="files.url" />
+        <Image v-else class="noselect" ondragstart="return false" draggable="false" :src="files?.url" />
       </div>
       <p class="noselect">Uploaded by <b>{{ files?.uploader?.name }}</b> at <b>{{ moment(files?.date).format("D/MM/YY, h:mm:ss A") }}</b></p>
       <br class="noselect" ondragstart="return false" draggable="false">
@@ -37,8 +37,8 @@ import moment from "moment";
 
 const fileParam = useRoute().params.file as string;
 const { data, status } = useSession();
-const { data: file } = useLazyFetch(`/raw/${fileParam}`);
-const { data: files } = useLazyFetch(`/api/files/${fileParam.split(".")[0]}`)
+const { data: file } = useFetch(`/raw/${fileParam}`);
+const { data: files } = await useAsyncData("files", () => $fetch(`/api/files/${fileParam.split(".")[0]}`));
 const config = useRuntimeConfig();
 
 async function refreshPage() {
@@ -48,7 +48,7 @@ async function refreshPage() {
 }
 
 function deleteImage() {
-  useLazyFetch(`/api/files/${fileParam.split(".")[0]}`, {
+  useFetch(`/api/files/${fileParam.split(".")[0]}`, {
     method: "DELETE",
   });
 
@@ -60,18 +60,18 @@ function downloadImage() {
 }
 
 function markNSFW(val: boolean) {
-  useLazyFetch(`/api/files/${fileParam.split(".")[0]}`, {
+  useFetch(`/api/files/${fileParam.split(".")[0]}`, {
     method: "PATCH",
     body: JSON.stringify({
       nsfw: val,
     }),
   });
 
-  refreshPage();
+  window.location.reload();
 }
 
 useHead({
-  title: `VoidChan - ${fileParam}`,
+  title: `${fileParam} | VoidChan`,
   meta: [
     {
       property: "og:title",

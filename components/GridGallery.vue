@@ -1,15 +1,16 @@
 <template>
-<div class="gallery-view noselect" v-for="file in files?.reverse()" :key="file.date.toString()">
-  <nuxt-link v-if="file.nsfw" :href="'/v/' + file.id + '.' + file.ext"><img style="cursor: pointer;" class="nsfw" :src="file.url" draggable="false" alt=""></nuxt-link>
-  <nuxt-link v-else :href="'/v/' + file.id + '.' + file.ext"><img style="cursor: pointer;" :src="file.url" draggable="false" alt=""></nuxt-link>
+<div v-if="!files">
+  <NotFound />
+</div>
+<div class="gallery-view noselect" v-for="file in files" :key="file.id">
+  <nuxt-link v-if="file.nsfw" :href="'/v/' + file.id + '.' + file.ext"><Image style="cursor: pointer;" class="nsfw" :src="file.url" draggable="false" alt="" /></nuxt-link>
+  <nuxt-link v-else :href="'/v/' + file.id + '.' + file.ext"><Image style="cursor: pointer;" :src="file.url" draggable="false" alt="" /></nuxt-link>
 </div>
 </template>
 
 <script setup lang="ts">
 const user = useRoute().params.user;
-const { data: files } = useLazyFetch(`/api/users/${user}/files`);
-
-
+const { data: files } = await useAsyncData("files", () => $fetch(`/api/users/${user}/files`));
 </script>
 
 <style scoped>
