@@ -20,5 +20,5 @@ export default defineEventHandler(async (event) => {
       },
       url: `${config.BaseURL}/raw/${file.id}.${mime.getExtension(file.mimetype)}`,
     }
-  });
+  }).reverse();
 });

@@ -4,8 +4,10 @@ import { NuxtAuthHandler } from "#auth";
 import { IProfile, Profile } from "~~/server/database/models/profile.model";
 import bcrypt from "bcryptjs";
 
+const config = useRuntimeConfig();
+
 export default NuxtAuthHandler({
-  secret: "testinglololol",
+  secret: config.PrivateAuth,
   providers: [
     /* @ts-ignore */
     CredentialsProvider.default({

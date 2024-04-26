@@ -1,7 +1,9 @@
 <template>
-  <NuxtLoadingIndicator />
-  <NuxtPage />
-  <!-- <Footer /> -->
+  <div>
+    <Navbar />
+    <NuxtLoadingIndicator color="#7308ff" :duration="10000" />
+    <NuxtPage />
+  </div>
 </template>
 
 <script setup lang="ts">
