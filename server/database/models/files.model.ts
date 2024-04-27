@@ -3,7 +3,6 @@ import { Schema, model } from "mongoose";
 export interface IFiles {
   id: string;
   date: Date;
-  favourites: number;
   buffer: string;
   mimetype: string;
   nsfw: boolean;
@@ -18,11 +17,6 @@ const filesSchema = new Schema<IFiles>({
   date: {
     type: Schema.Types.Date,
     default: new Date(),
-    required: true,
-  },
-  favourites: {
-    type: Schema.Types.Number,
-    default: 0,
     required: true,
   },
   buffer: {
