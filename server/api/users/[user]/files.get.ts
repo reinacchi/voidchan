@@ -4,7 +4,6 @@ import mime from "mime";
 
 export default defineEventHandler(async (event) => {
   const user = getRouterParam(event, "user") as string;
-  const config = useRuntimeConfig();
   const profile = await Profile.findOne({ name: user }) as IProfile;
   const files = await Files.find({ id: profile.files }) as IFiles[];
 
@@ -18,7 +17,6 @@ export default defineEventHandler(async (event) => {
         name: profile.name,
       },
       url: `data:${file.mimetype};base64,${file.buffer}`,
-      // url: `${config.BaseURL}/raw/${file.id}.${mime.getExtension(file.mimetype)}`,
     }
   }).reverse();
 });

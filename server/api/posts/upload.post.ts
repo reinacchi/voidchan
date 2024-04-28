@@ -1,5 +1,6 @@
 import { getServerSession } from "#auth";
 import { Posts, IPosts } from "~~/server/database/models/posts.model";
+import { Profile } from "~~/server/database/models/profile.model";
 import { generateString } from "~~/utils/generateString";
 
 export default defineEventHandler(async (event) => {
@@ -35,4 +36,6 @@ export default defineEventHandler(async (event) => {
     tags: body.fileTags ?? [],
     uploader: session.user?.name,
   } as IPosts);
+
+  await Profile.findOneAndUpdate({ name: session.user?.name }, { $push: { posts: post.length ? post.length - 1 : 0 } });
 });
