@@ -265,15 +265,16 @@
 <script setup lang="ts">
 import { bytesToSize } from "~~/utils/bytesToSize";
 
+const { data } = useAuth();
 const file = ref<FileList | null>(null);
 const previewFile = ref<string | null>(null);
 const fileSize = ref<string | null>(null);
 const fileType = ref<string | null>(null);
 const fileRating = ref<string | null>(null);
-const fileArtists = ref<string>("");
 const fileCharacters = ref<string>("");
 const fileSource = ref<string>("");
 const fileTags = ref<string>("");
+const {} = await useFetch(`/api/users/${(data as any).value?.user.name}`);
 
 function handleFileUpload(event: Event) {
   file.value = (event.target as HTMLInputElement).files;
@@ -288,7 +289,7 @@ function handleFileUpload(event: Event) {
   fileType.value = (file as any).value[0].type.split("/")[1];
 }
 
-function handleFileSubmit() {
+async function handleFileSubmit() {
   const formData = new FormData();
   if (file.value) {
     Array.from(file.value).forEach((value) => {
@@ -302,7 +303,7 @@ function handleFileSubmit() {
 
   if (!file.value) return alert("No file uploaded!");
 
-  $fetch("/api/posts/upload", {
+  await $fetch("/api/posts/upload", {
     method: "POST",
     body: {
       fileBuffer: previewFile.value,

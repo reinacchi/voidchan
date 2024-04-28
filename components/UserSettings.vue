@@ -79,8 +79,8 @@ function updateSettings() {
   password.value = undefined;
 }
 
-function copyAuth() {
-  const { data: key } = useFetch(`/api/users/${data.value?.user?.name}`, {
+async function copyAuth() {
+  const { data: key } = await useFetch(`/api/users/${data.value?.user?.name}`, {
     method: "GET",
     headers: {
       authorization: config.PrivateAuth,

@@ -8,16 +8,21 @@ export default defineEventHandler(async (event) => {
 
   if (event.node.req.headers.authorization === config.PrivateAuth) {
     return {
-      admin: profile.admin,
+      clearanceLevel: profile.clearanceLevel,
       auth: profile.authKey,
       createdAt: profile.date,
+      displayName: profile.displayName,
       email: profile.email,
       name: profile.name,
+      posts: profile.posts,
     }
   } else {
     return {
+      clearanceLevel: profile.clearanceLevel,
       createdAt: profile.date,
+      displayName: profile.displayName,
       name: profile.name,
+      posts: profile.posts,
     }
   }
 });

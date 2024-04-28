@@ -6,17 +6,8 @@
     <div>
       <div v-if="status === 'authenticated'">
         <p class="noselect">
-          Hello, <b>{{ data?.user?.name }}</b>.
+          Hello, <b>{{ user.displayName }}</b>.
         </p>
-        <br class="noselect" /><br class="noselect" />
-        <nuxt-link to="/users/settings"
-          ><button
-            class="btn mx-2 noselect"
-            style="color: #9ff331; border-color: #9ff331"
-          >
-            Settings
-          </button></nuxt-link
-        >
       </div>
     </div>
   </div>
@@ -24,6 +15,6 @@
 
 <script setup lang="ts">
 /* @ts-ignore */
-const { data, status, signIn, signOut } = useAuth();
-
+const { data, status} = useAuth();
+const { data: user } = await useFetch(`/api/users/${data.value?.user?.name}`) as any;
 </script>
