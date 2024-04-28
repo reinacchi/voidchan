@@ -17,8 +17,8 @@ export default defineNuxtConfig({
     shim: false,
   },
   auth: {
-    origin: process.env.BASE_URL,
-    enableGlobalAppMiddleware: true,
+    baseURL: process.env.BASE_URL,
+    globalAppMiddleware: true,
   },
   css: [
     "@/assets/css/style.css",
