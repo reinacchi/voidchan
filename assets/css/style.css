@@ -44,11 +44,7 @@ a:hover {
   text-decoration: underline;
 }
 
-h1,
-h2 {
-  margin: 0;
-  padding: 0;
-}
+
 
 .noselect {
   -webkit-touch-callout: none; /* iOS Safari */
@@ -96,7 +92,6 @@ h2 {
 input[type="text"],
 input[type="password"] {
   padding: 10px;
-  border-radius: 10px;
   font-family: inherit;
   font-size: 15px;
   text-align: center;
