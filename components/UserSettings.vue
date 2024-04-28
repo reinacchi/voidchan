@@ -14,7 +14,7 @@
             </label>
             <p class="text-sm mb-5">Change your old password with a new one if you have forgotten yours.</p>
             <input
-              class="shadow bg-violet-900 bg-opacity-10 border-violet-900 border-opacity-60 appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
+              class="shadow bg-violet-900 bg-opacity-10 border-violet-900 border-opacity-60 appearance-none border rounded-lg w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
               v-model="password"
               type="password"
               placeholder="Password"
@@ -46,7 +46,7 @@ function resetKey() {
   newKey.value = generateString(32);
 
   resetAuth.value = true;
-  useFetch(`/api/users/${data.value?.user?.name}`, {
+  $fetch(`/api/users/${data.value?.user?.name}`, {
     method: "PATCH",
     headers: {
       authorization: config.PrivateAuth,
@@ -66,7 +66,7 @@ function updateSettings() {
     return;
   }
 
-  useFetch(`/api/users/${data.value?.user?.name}`, {
+  $fetch(`/api/users/${data.value?.user?.name}`, {
     method: "PATCH",
     headers: {
       authorization: config.PrivateAuth,
