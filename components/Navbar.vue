@@ -11,14 +11,16 @@
           </div>
           <div class="hidden md:block">
             <div class="ml-10 flex items-baseline space-x-4">
-              <nuxt-link v-if="status === 'authenticated'" @click="toMyUpload" class="text-gray-300 hover:cursor-pointer hover:text-white hover:no-underline px-3 py-2 rounded-md text-sm font-medium">My Uploads</nuxt-link>
+              <nuxt-link @click="toPosts" class="text-gray-300 hover:cursor-pointer hover:text-white hover:no-underline px-3 py-2 rounded-md text-sm font-medium">Posts</nuxt-link>
+              <nuxt-link v-if="status === 'authenticated'" @click="toMyShares" class="text-gray-300 hover:cursor-pointer hover:text-white hover:no-underline px-3 py-2 rounded-md text-sm font-medium">My Shares</nuxt-link>
               <nuxt-link v-if="status === 'authenticated'" @click="toMyProfile" class="text-gray-300 hover:cursor-pointer hover:text-white hover:no-underline px-3 py-2 rounded-md text-sm font-medium">My Profile</nuxt-link>
+              <nuxt-link v-if="status === 'authenticated'" @click="toUpload" class="text-gray-300 hover:cursor-pointer hover:text-white hover:no-underline px-3 py-2 rounded-md text-sm font-medium">Upload New</nuxt-link>
             </div>
           </div>
         </div>
         <div class="flex items-center space-x-4">
           <div class="hidden md:flex">
-            <button v-if="status === 'unauthenticated'" @click="signIn()" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Login</button>
+            <button v-if="status === 'unauthenticated'" @click="signIn('')" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Login</button>
             <button v-else @click="signOut({ callbackUrl: '/' })" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Logout</button>
           </div>
           <div class="md:hidden">
@@ -35,10 +37,12 @@
 
     <div :class="{ 'block': isOpen, 'hidden': !isOpen }" class="md:hidden">
       <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-        <nuxt-link v-if="status === 'authenticated'" @click="toMyUpload" class="text-gray-300 hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">My Uploads</nuxt-link>
+        <nuxt-link @click="toPosts" class="text-gray-300 hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">Posts</nuxt-link>
+        <nuxt-link v-if="status === 'authenticated'" @click="toMyShares" class="text-gray-300 hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">My Shares</nuxt-link>
         <nuxt-link v-if="status === 'authenticated'" @click="toMyProfile" class="text-gray-300 hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">My Profile</nuxt-link>
+        <nuxt-link v-if="status === 'authenticated'" @click="toUpload" class="text-gray-300 hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">Upload New</nuxt-link>
         <hr style="border-color: #16101f;">
-        <span v-if="status === 'unauthenticated'" @click="signIn()" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</span>
+        <span v-if="status === 'unauthenticated'" @click="signIn('')" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</span>
         <span v-else @click="signOut({ callbackUrl: '/' })" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Logout</span>
       </div>
     </div>
@@ -52,11 +56,17 @@ const { data, status, signIn, signOut } = useAuth();
 function toggleMenu() {
   isOpen.value = !isOpen.value;
 }
-function toMyUpload() {
-  useRouter().push(`/users/${data?.value?.user?.name}/uploads`);
+function toPosts() {
+  useRouter().push("/posts");
+}
+function toMyShares() {
+  useRouter().push(`/users/${data?.value?.user?.name}/shares`);
 }
 function toMyProfile() {
   useRouter().push(`/users/${data?.value?.user?.name}/profile`);
+}
+function toUpload() {
+  useRouter().push("/posts/upload");
 }
 </script>
 
