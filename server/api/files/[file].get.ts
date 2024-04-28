@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
       uploader: {
         name: uploader.name,
       },
-      url: `${config.BaseURL}/raw/${file.id}.${mime.getExtension(file.mimetype)}`,
+      url: `data:${file.mimetype};base64,${file.buffer}`,
     };
   } else {
     const profile = await Profile.findOne({ name: session.user.name }) as IProfile;
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
         admin: profile.admin,
         name: uploader.name,
       },
-      url: `${config.BaseURL}/raw/${file.id}.${mime.getExtension(file.mimetype)}`,
+      url: `data:${file.mimetype};base64,${file.buffer}`,
     };
   }
 
