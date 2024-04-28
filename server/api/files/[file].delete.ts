@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   const profile = await Profile.findOne({ name: session?.user?.name }) as IProfile;
   const uploader = await Profile.find({ files: file });
 
-  if (profile.admin) {
+  if (profile.clearanceLevel.includes("Moderator")) {
     await Profile.findOneAndUpdate({ name: uploader[0].name }, { $pull: { files: file } });
     await Files.findOneAndDelete({ id: file });
   }

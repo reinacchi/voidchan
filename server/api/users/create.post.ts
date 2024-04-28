@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (!profile.admin) {
+  if (!profile.clearanceLevel.includes("Moderator")) {
     return {
       code: 403,
       message: "Not Allowed"
@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   const authKey = generateString(32);
 
   Profile.create({
-    admin: false,
+    clearanceLevel: ["member"],
     authKey,
     date: new Date(),
     email: "",

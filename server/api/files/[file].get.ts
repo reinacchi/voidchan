@@ -4,7 +4,6 @@ import mime from "mime";
 import { getServerSession } from "#auth";
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig();
   const fileID = getRouterParam(event, "file") as string;
   const file = await Files.findOne({ id: fileID }) as IFiles;
   const session = await getServerSession(event) as any;
@@ -37,7 +36,7 @@ export default defineEventHandler(async (event) => {
       ext: mime.getExtension(file.mimetype),
       nsfw: file.nsfw,
       uploader: {
-        admin: profile.admin,
+        clearanceLevel: profile.clearanceLevel,
         name: uploader.name,
       },
       url: `data:${file.mimetype};base64,${file.buffer}`,

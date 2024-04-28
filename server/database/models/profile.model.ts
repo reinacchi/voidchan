@@ -1,19 +1,23 @@
 import { Schema, model } from "mongoose";
 
+type ClearanceLevel = "Project Lead" | "Developer" | "Moderator" | "Nominator" | "Contributor" | "Plus" | "Member";
+
 export interface IProfile {
-  admin: boolean;
   authKey: string;
+  clearanceLevel: ClearanceLevel[];
   date: Date;
+  displayName: string;
   email: string;
   files: string[];
   password: string;
+  posts: number[];
   name: string;
 }
 
 const profileSchema = new Schema<IProfile>({
-  admin: {
-    type: Schema.Types.Boolean,
-    default: false,
+  clearanceLevel: {
+    type: [Schema.Types.String],
+    default: ["Member"],
     required: true,
   },
   authKey: {
@@ -24,6 +28,10 @@ const profileSchema = new Schema<IProfile>({
     type: Schema.Types.Date,
     default: new Date(),
     required: true,
+  },
+  displayName: {
+    type: Schema.Types.String,
+    required: false,
   },
   email: {
     type: Schema.Types.String,
@@ -36,6 +44,11 @@ const profileSchema = new Schema<IProfile>({
   },
   password: {
     type: Schema.Types.String,
+    required: true,
+  },
+  posts: {
+    type: [Schema.Types.Number],
+    default: [],
     required: true,
   },
   name: {

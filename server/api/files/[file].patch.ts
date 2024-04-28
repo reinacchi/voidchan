@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   const profile = await Profile.findOne({ name: session?.user?.name }) as IProfile;
 
-  if (profile.admin) {
+  if (profile.clearanceLevel.includes("Moderator")) {
     const body = await readBody(event);
 
     await Files.findOneAndUpdate({ id: file }, { $set: { "nsfw": body.nsfw }});
