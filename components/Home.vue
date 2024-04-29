@@ -16,5 +16,5 @@
 <script setup lang="ts">
 /* @ts-ignore */
 const { data, status} = useAuth();
-const { data: user } = await useFetch(`/api/users/${data.value?.user?.name}`) as any;
+const { data: user } = status.value === "authenticated" ? await useFetch(`/api/users/${data.value?.user?.name}`): {} as any;
 </script>
