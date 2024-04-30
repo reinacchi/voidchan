@@ -7,6 +7,13 @@ body {
   text-align: center;
 }
 
+.text-accent {
+    background: linear-gradient(to right, #42b893, #7308ff, #42b893, #7308ff);
+    background-clip: content-box;
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+}
+
 code {
   background: #070707;
   padding: 2px 5px;

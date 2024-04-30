@@ -11,7 +11,7 @@
         <Image v-if="files?.nsfw" class="nsfw noselect" ondragstart="return false" draggable="false" :src="files.url" />
         <Image v-else class="noselect" ondragstart="return false" draggable="false" :src="files?.url" />
       </div>
-      <p class="noselect">Uploaded by <b>{{ files?.uploader?.name }}</b> at <b>{{ moment(files?.date).format("D/MM/YY, h:mm:ss A") }}</b></p>
+      <p class="noselect">Uploaded by <nuxt-link class="text-violet-500" :to="'/users/' + files?.uploader?.name"><b>{{ files?.uploader?.name }}</b></nuxt-link> at <b>{{ moment(files?.date).format("D/MM/YY, h:mm:ss A") }}</b></p>
       <br class="noselect" ondragstart="return false" draggable="false">
       <div>
         <nuxt-link to="/"><button class="btn mx-2 noselect"><i class="fas fa-home"></i> Home</button></nuxt-link>

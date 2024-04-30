@@ -7,7 +7,7 @@
         class="relative group inline-block ml-2"
       >
         <i
-          class="text-3xl fal fa-leaf cursor-pointer text-[#42B893]"
+          class="text-3xl fal fa-leaf-maple cursor-pointer text-accent"
         ></i>
         <div
           class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
@@ -15,7 +15,71 @@
           <span
             class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
           ></span>
-          Project Lead
+          <span class="text-accent">Project Lead</span>
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Developer')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-code cursor-pointer text-teal-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Developer
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Moderator')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-shield cursor-pointer text-red-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Moderator
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Nominator')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-gavel cursor-pointer text-orange-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Nominator
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Contributor')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-brackets-curly cursor-pointer text-green-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Contributor
         </div>
       </div>
       <div
@@ -48,6 +112,38 @@
             class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
           ></span>
           Plus
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Supporter')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-heart cursor-pointer text-pink-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Supporter
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Alumni')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-dice cursor-pointer text-gray-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Alumni
         </div>
       </div>
     </h1>
@@ -113,7 +209,7 @@
         class="relative group inline-block ml-2"
       >
         <i
-          class="text-3xl fal fa-leaf cursor-pointer text-[#42B893]"
+          class="text-3xl fal fa-leaf-maple cursor-pointer text-accent"
         ></i>
         <div
           class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
@@ -121,7 +217,71 @@
           <span
             class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
           ></span>
-          Project Lead
+          <span class="text-accent">Project Lead</span>
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Developer')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-code cursor-pointer text-teal-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Developer
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Moderator')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-shield cursor-pointer text-red-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Moderator
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Nominator')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-gavel cursor-pointer text-orange-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Nominator
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Contributor')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-brackets-curly cursor-pointer text-green-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Contributor
         </div>
       </div>
       <div
@@ -156,6 +316,38 @@
           Plus
         </div>
       </div>
+      <div
+        v-if="user.clearanceLevel.includes('Supporter')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-heart cursor-pointer text-pink-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Supporter
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Alumni')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-dice cursor-pointer text-gray-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Alumni
+        </div>
+      </div>
     </h1>
     <br /><br />
     <div class="flex ml-14 items-center text-gray-300">
@@ -187,7 +379,7 @@
     <br />
     <div class="flex ml-[48px] items-center text-gray-300">
       <h2 class="text-lg font-semibold">Clearance Levels:</h2>
-      <h2 class="text-lg ml-14">{{ user.clearanceLevel.join(", ") }}</h2>
+      <h2 class="text-lg ml-14">{{ user.clearanceLevel[0] }}</h2>
     </div>
     <br />
     <div class="flex ml-14 items-center text-gray-300">

@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-type ClearanceLevel = "Project Lead" | "Developer" | "Moderator" | "Nominator" | "Contributor" | "Verified" | "Plus" | "Member";
+type ClearanceLevel = "Project Lead" | "Developer" | "Moderator" | "Nominator" | "Contributor" | "Verified" | "Plus" | "Alumni" | "Supporter" | "Member";
 
 export interface IProfile {
   authKey: string;
