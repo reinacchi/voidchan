@@ -9,16 +9,22 @@
   </div>
   <div>
     <h2 class="text-xl font-bold mt-12 flex ml-12">Profile</h2>
-    <nuxt-link :to="'/users/' + session?.user.name" class="text-base flex ml-12 text-violet-500">Profile</nuxt-link>
-    <nuxt-link to="/users/settings" class="text-base flex ml-12 text-violet-500">Settings</nuxt-link>
-    <nuxt-link :to="'/users/' + session?.user.name + '/uploads'" class="text-base flex ml-12 text-violet-500">Uploads</nuxt-link>
-    <nuxt-link :to="'/users/' + session?.user.name + '/shares'" class="text-base flex ml-12 text-violet-500">Shares</nuxt-link>
+    <div v-if="status === 'authenticated'">
+      <nuxt-link :to="'/users/' + session?.user.name" class="text-base flex ml-12 text-violet-500">Profile</nuxt-link>
+      <nuxt-link to="/users/settings" class="text-base flex ml-12 text-violet-500">Settings</nuxt-link>
+      <nuxt-link :to="'/users/' + session?.user.name + '/uploads'" class="text-base flex ml-12 text-violet-500">Uploads</nuxt-link>
+      <nuxt-link :to="'/users/' + session?.user.name + '/shares'" class="text-base flex ml-12 text-violet-500">Shares</nuxt-link>
+      <span @click="signOut({ callbackUrl: '/' })" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Logout</span>
+    </div>
+    <div v-else>
+      <span @click="signIn('')" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Login</span>
+    </div>
   </div>
 </div>
 </template>
 
 <script setup lang="ts">
-const { data: session } = useAuth() as any;
+const { data: session, signIn, signOut, status } = useAuth() as any;
 
 useHead({
   title: "Site Map | VoidChan"
