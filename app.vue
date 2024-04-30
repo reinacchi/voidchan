@@ -9,9 +9,10 @@
 <script setup lang="ts">
 useHead({
   title: "VoidChan",
-  script: [
+  link: [
     {
-      src: "https://kit.fontawesome.com/e931be9ca1.js",
+      rel: "stylesheet",
+      href: "https://site-assets.fontawesome.com/releases/v6.1.1/css/all.css",
     },
   ],
   meta: [
