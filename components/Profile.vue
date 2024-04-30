@@ -7,15 +7,28 @@
       <h2 class="text-lg ml-14">
         {{ user.name }}
         <span v-if="session?.user.name === user.name"
-          >(<nuxt-link to="/users/settings" class="font-bold">edit</nuxt-link
+          >(<nuxt-link to="/users/settings" class="text-violet-500"
+            >edit</nuxt-link
           >)</span
         >
+      <div v-if="user.clearanceLevel.includes('Verified')" class="relative inline-block group">
+        <i v-if="session?.user.name === user.name" class="fal fa-badge-check ml-2 cursor-pointer text-blue-500"></i>
+        <i v-else class="fal fa-badge-check cursor-pointer text-blue-500"></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Verified Account
+        </div>
+      </div>
       </h2>
     </div>
     <br v-if="session?.user.name === user.name" />
     <div
       v-if="session?.user.name === user.name"
-      class="flex ml-28 items-center text-gray-300"
+      class="relative ml-28 flex items-center text-gray-300"
     >
       <h2 class="text-lg font-semibold ml-[88px]">Email:</h2>
       <h2 class="text-lg ml-14">{{ session?.user.email }}</h2>
@@ -29,12 +42,12 @@
     </div>
     <br />
     <div class="flex ml-28 items-center text-gray-300">
-      <h2 class="text-lg font-semibold">Clearance Level:</h2>
+      <h2 class="text-lg font-semibold">{{ user.clearanceLevel.length >= 2 ? "Clearance Levels:" : "Clearance Level:" }}</h2>
       <h2 class="text-lg ml-14">{{ user.clearanceLevel.join(", ") }}</h2>
     </div>
     <br />
     <div class="flex ml-28 items-center text-gray-300">
-      <h2 class="text-lg font-semibold ml-[84px]">Posts:</h2>
+      <h2 class="text-lg font-semibold ml-[84px]">{{ user.posts.length >= 2 ? "Posts" : "Post" }}</h2>
       <h2 class="text-lg ml-14">{{ user.posts.length }}</h2>
     </div>
     <br /><br /><br />
@@ -61,9 +74,22 @@
       <h2 class="text-lg ml-14">
         {{ user.name }}
         <span v-if="session?.user.name === user.name"
-          >(<nuxt-link to="/users/settings" class="font-bold">edit</nuxt-link
+          >(<nuxt-link to="/users/settings" class="text-violet-500"
+            >edit</nuxt-link
           >)</span
         >
+      <div v-if="user.clearanceLevel.includes('Verified')" class="relative inline-block group cursor-pointer">
+        <i v-if="session?.user.name === user.name" class="fal fa-badge-check ml-2 cursor-pointer text-blue-500"></i>
+        <i v-else class="fal fa-badge-check cursor-pointer text-blue-500"></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Verified Account
+        </div>
+      </div>
       </h2>
     </div>
     <br v-if="session?.user.name === user.name" />
@@ -83,20 +109,24 @@
     </div>
     <br />
     <div class="flex ml-14 items-center text-gray-300">
-      <h2 class="text-lg font-semibold">Clearance Level:</h2>
+      <h2 class="text-lg font-semibold">{{ user.clearanceLevel.length >= 2 ? "Clearance Levels:" : "Clearance Level:" }}</h2>
       <h2 class="text-lg ml-14">{{ user.clearanceLevel.join(", ") }}</h2>
     </div>
     <br />
     <div class="flex ml-14 items-center text-gray-300">
-      <h2 class="text-lg font-semibold ml-[84px]">Posts:</h2>
+      <h2 class="text-lg font-semibold ml-[84px]">{{ user.posts.length >= 2 ? "Posts" : "Post" }}</h2>
       <h2 class="text-lg ml-14">{{ user.posts.length }}</h2>
     </div>
-    <br><br><br>
+    <br /><br /><br />
     <div class="ml-6 text-gray-300">
       <h2 class="text-2xl font-semibold mr-[25rem]">Uploads</h2>
     </div>
     <div class="flex items-center ml-[3rem]">
-      <div class="gallery-view-small noselect" v-for="post in posts" :key="post.id">
+      <div
+        class="gallery-view-small noselect"
+        v-for="post in posts"
+        :key="post.id"
+      >
         <nuxt-link :href="'/posts/' + post.id"
           ><Image
             style="cursor: pointer"
@@ -137,7 +167,8 @@ useHead({
   transition: all cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s;
 }
 
-.gallery-view:hover, .gallery-view-small:hover {
+.gallery-view:hover,
+.gallery-view-small:hover {
   box-shadow: 0 0 10px 5px rgb(60, 27, 109);
   border: 20px;
   color: rgb(60, 27, 109);

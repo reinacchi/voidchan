@@ -49,6 +49,38 @@
       <div class="mt-3 ml-2 pr-[5rem]">
         <div class="flex items-center">
           <label for="rating" class="mr-2 text-xl font-semibold">Rating:</label>
+          <div class="relative inline-block group">
+            <i class="fal fa-circle-question pr-2 cursor-pointer"></i>
+            <div
+              class="absolute mt-2 top-full left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 text-xs rounded-md whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+            >
+              <span
+                class="arrow-down ml-12 absolute top-0 left-1/2 transform -translate-x-1/2"
+              ></span>
+              <span>
+                <b>Explicit</b>
+                <br />
+                Graphic sex or violence. Sex acts, exposed genitals (pussy,
+                penis, anus), body fluids (cum, pussy juice).
+                <br />
+                <br />
+                <b>Erotica</b>
+                <br />
+                Simple nudity or near-nudity. Bare nipples, ass, areolae,
+                revealing clothes, cameltoes, etc. No sex or exposed genitals.
+                <br />
+                <br />
+                <b>Suggestive</b>
+                <br />
+                Sexy or suggestive, even mildly so. Cleavage, breast or ass focus, swimsuits, underwear, skimpy clothes, etc. No nudity.
+                <br />
+                <br />
+                <b>Safe</b>
+                <br />
+                100% safe. Nothing sexualised or inappropriate to view in front of others.
+              </span>
+            </div>
+          </div>
           <div
             class="border bg-violet-900 bg-opacity-10 border-violet-900 rounded-md p-1 flex items-center"
           >
@@ -128,7 +160,7 @@
             class="shadow bg-violet-900 bg-opacity-10 border-violet-900 appearance-none border border-solid w-full h-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
           ></textarea>
           <br /><br />
-          <label class="text-xl mr-[15rem] font-semibold">Characters(s)</label>
+          <label class="text-xl mr-[15rem] font-semibold">Character(s)</label>
           <br />
           <input
             class="shadow bg-violet-900 bg-opacity-10 border-violet-900 appearance-none border border-solid w-full h-6 py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
@@ -159,6 +191,38 @@
       <br />
       <div class="flex items-center ml-12">
         <label for="rating" class="mr-2 text-xl font-semibold">Rating:</label>
+        <div class="relative inline-block group">
+            <i class="fal fa-circle-question pr-2 cursor-pointer"></i>
+            <div
+              class="absolute w-[15rem] mt-2 top-full left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 text-xs rounded-md whitespace-pre-line opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+            >
+              <span
+                class="arrow-down ml-12 absolute top-0 left-1/2 transform -translate-x-1/2"
+              ></span>
+              <span>
+                <b>Explicit</b>
+                <br />
+                Graphic sex or violence. Sex acts, exposed genitals (pussy,
+                penis, anus), body fluids (cum, pussy juice).
+                <br />
+                <br />
+                <b>Erotica</b>
+                <br />
+                Simple nudity or near-nudity. Bare nipples, ass, areolae,
+                revealing clothes, cameltoes, etc. No sex or exposed genitals.
+                <br />
+                <br />
+                <b>Suggestive</b>
+                <br />
+                Sexy or suggestive, even mildly so. Cleavage, breast or ass focus, swimsuits, underwear, skimpy clothes, etc. No nudity.
+                <br />
+                <br />
+                <b>Safe</b>
+                <br />
+                100% safe. Nothing sexualised or inappropriate to view in front of others.
+              </span>
+            </div>
+          </div>
         <div
           class="border bg-violet-900 bg-opacity-10 border-violet-900 rounded-md p-1 flex items-center"
         >
@@ -239,7 +303,7 @@
       ></textarea>
       <br /><br />
       <div class="flex ml-12 items-center">
-        <label class="text-xl font-semibold">Characters</label>
+        <label class="text-xl font-semibold">Character(s)</label>
       </div>
       <input
         class="shadow bg-violet-900 bg-opacity-10 border-violet-900 flex ml-12 appearance-none border border-solid w-4/5 h-8 py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"

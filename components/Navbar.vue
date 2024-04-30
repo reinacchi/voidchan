@@ -15,6 +15,7 @@
               <nuxt-link v-if="status === 'authenticated'" @click="toMyShares" class="text-gray-300 hover:cursor-pointer hover:text-white hover:no-underline px-3 py-2 rounded-md text-sm font-medium">My Shares</nuxt-link>
               <nuxt-link v-if="status === 'authenticated'" @click="toMyProfile" class="text-gray-300 hover:cursor-pointer hover:text-white hover:no-underline px-3 py-2 rounded-md text-sm font-medium">My Profile</nuxt-link>
               <nuxt-link v-if="status === 'authenticated'" @click="toUpload" class="text-gray-300 hover:cursor-pointer hover:text-white hover:no-underline px-3 py-2 rounded-md text-sm font-medium">Upload New</nuxt-link>
+              <nuxt-link @click="toMore" class="text-gray-300 hover:cursor-pointer hover:text-white hover:no-underline px-3 py-2 rounded-md text-sm font-medium">More »</nuxt-link>
             </div>
           </div>
         </div>
@@ -41,6 +42,7 @@
         <nuxt-link v-if="status === 'authenticated'" @click="toMyShares" class="text-gray-300 hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">My Shares</nuxt-link>
         <nuxt-link v-if="status === 'authenticated'" @click="toMyProfile" class="text-gray-300 hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">My Profile</nuxt-link>
         <nuxt-link v-if="status === 'authenticated'" @click="toUpload" class="text-gray-300 hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">Upload New</nuxt-link>
+        <nuxt-link @click="toMore" class="text-gray-300 hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">More »</nuxt-link>
         <hr style="border-color: #16101f;">
         <span v-if="status === 'unauthenticated'" @click="signIn('')" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</span>
         <span v-else @click="signOut({ callbackUrl: '/' })" class="text-gray-300 hover:text-white block px-3 cursor-pointer py-2 rounded-md text-base font-medium">Logout</span>
@@ -68,8 +70,7 @@ function toMyProfile() {
 function toUpload() {
   useRouter().push("/posts/upload");
 }
+function toMore() {
+  useRouter().push("/sitemap");
+}
 </script>
-
-<style>
-/* Add your custom styles here if needed */
-</style>
