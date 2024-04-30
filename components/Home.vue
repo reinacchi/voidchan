@@ -1,6 +1,6 @@
 <template>
   <div class="centered">
-    <h1 class="text-2xl p-5 noselect">
+    <h1 class="text-4xl p-5 noselect">
       <span class="font-extrabold">VoidChan</span>
     </h1>
     <div>
