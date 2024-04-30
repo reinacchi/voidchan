@@ -41,13 +41,13 @@
       </h2>
     </div>
     <br />
-    <div class="flex ml-28 items-center text-gray-300">
-      <h2 class="text-lg font-semibold">{{ user.clearanceLevel.length >= 2 ? "Clearance Levels:" : "Clearance Level:" }}</h2>
+    <div class="flex ml-[104px] items-center text-gray-300">
+      <h2 class="text-lg font-semibold">Clearance Levels:</h2>
       <h2 class="text-lg ml-14">{{ user.clearanceLevel.join(", ") }}</h2>
     </div>
     <br />
     <div class="flex ml-28 items-center text-gray-300">
-      <h2 class="text-lg font-semibold ml-[84px]">{{ user.posts.length >= 2 ? "Posts" : "Post" }}</h2>
+      <h2 class="text-lg font-semibold ml-[84px]">Posts:</h2>
       <h2 class="text-lg ml-14">{{ user.posts.length }}</h2>
     </div>
     <br /><br /><br />
@@ -108,13 +108,13 @@
       </h2>
     </div>
     <br />
-    <div class="flex ml-14 items-center text-gray-300">
-      <h2 class="text-lg font-semibold">{{ user.clearanceLevel.length >= 2 ? "Clearance Levels:" : "Clearance Level:" }}</h2>
+    <div class="flex ml-[48px] items-center text-gray-300">
+      <h2 class="text-lg font-semibold">Clearance Levels:</h2>
       <h2 class="text-lg ml-14">{{ user.clearanceLevel.join(", ") }}</h2>
     </div>
     <br />
     <div class="flex ml-14 items-center text-gray-300">
-      <h2 class="text-lg font-semibold ml-[84px]">{{ user.posts.length >= 2 ? "Posts" : "Post" }}</h2>
+      <h2 class="text-lg font-semibold ml-[84px]">Posts:</h2>
       <h2 class="text-lg ml-14">{{ user.posts.length }}</h2>
     </div>
     <br /><br /><br />
