@@ -1,6 +1,57 @@
 <template>
   <div class="hidden noselect md:block">
-    <h1 class="text-4xl font-bold mt-12 flex ml-12">{{ user.displayName }}</h1>
+    <h1 class="text-4xl font-bold mt-12 flex items-center ml-12">
+      {{ user.displayName }}
+      <div
+        v-if="user.clearanceLevel.includes('Project Lead')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-leaf cursor-pointer text-[#42B893]"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Project Lead
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Verified')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-badge-check cursor-pointer text-blue-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Verified Account
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Plus')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-crown cursor-pointer text-yellow-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Plus
+        </div>
+      </div>
+    </h1>
+
     <br /><br />
     <div class="flex ml-28 items-center text-gray-300">
       <h2 class="text-lg font-semibold ml-12">Username:</h2>
@@ -11,18 +62,6 @@
             >edit</nuxt-link
           >)</span
         >
-      <div v-if="user.clearanceLevel.includes('Verified')" class="relative inline-block group">
-        <i v-if="session?.user.name === user.name" class="fal fa-badge-check ml-2 cursor-pointer text-blue-500"></i>
-        <i v-else class="fal fa-badge-check cursor-pointer text-blue-500"></i>
-        <div
-          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
-        >
-          <span
-            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
-          ></span>
-          Verified Account
-        </div>
-      </div>
       </h2>
     </div>
     <br v-if="session?.user.name === user.name" />
@@ -41,9 +80,9 @@
       </h2>
     </div>
     <br />
-    <div class="flex ml-[104px] items-center text-gray-300">
-      <h2 class="text-lg font-semibold">Clearance Levels:</h2>
-      <h2 class="text-lg ml-14">{{ user.clearanceLevel.join(", ") }}</h2>
+    <div class="flex ml-[112px] items-center text-gray-300">
+      <h2 class="text-lg font-semibold">Clearance Level:</h2>
+      <h2 class="text-lg ml-14">{{ user.clearanceLevel[0] }}</h2>
     </div>
     <br />
     <div class="flex ml-28 items-center text-gray-300">
@@ -67,7 +106,57 @@
     </div>
   </div>
   <div class="noselect md:hidden">
-    <h1 class="text-4xl font-bold mt-12 flex ml-12">{{ user.displayName }}</h1>
+    <h1 class="text-4xl font-bold mt-12 flex ml-12">
+      {{ user.displayName }}
+      <div
+        v-if="user.clearanceLevel.includes('Project Lead')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-leaf cursor-pointer text-[#42B893]"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Project Lead
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Verified')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-badge-check cursor-pointer text-blue-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Verified Account
+        </div>
+      </div>
+      <div
+        v-if="user.clearanceLevel.includes('Plus')"
+        class="relative group inline-block ml-2"
+      >
+        <i
+          class="text-3xl fal fa-crown cursor-pointer text-yellow-500"
+        ></i>
+        <div
+          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+        >
+          <span
+            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
+          ></span>
+          Plus
+        </div>
+      </div>
+    </h1>
     <br /><br />
     <div class="flex ml-14 items-center text-gray-300">
       <h2 class="text-lg font-semibold ml-12">Username:</h2>
@@ -78,18 +167,6 @@
             >edit</nuxt-link
           >)</span
         >
-      <div v-if="user.clearanceLevel.includes('Verified')" class="relative inline-block group cursor-pointer">
-        <i v-if="session?.user.name === user.name" class="fal fa-badge-check ml-2 cursor-pointer text-blue-500"></i>
-        <i v-else class="fal fa-badge-check cursor-pointer text-blue-500"></i>
-        <div
-          class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 invisible text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
-        >
-          <span
-            class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
-          ></span>
-          Verified Account
-        </div>
-      </div>
       </h2>
     </div>
     <br v-if="session?.user.name === user.name" />
