@@ -4,20 +4,20 @@
   <p class="text-sm mt-4 flex ml-12">Are you lost? Perhaps you're in the right place...</p>
   <div>
     <h2 class="text-xl font-bold mt-12 flex ml-12">Posts</h2>
-    <nuxt-link to="/posts" class="text-base flex ml-12 text-violet-500">Posts</nuxt-link>
-    <nuxt-link to="/posts/upload" class="text-base flex ml-12 text-violet-500">Upload New</nuxt-link>
+    <p class="text-base flex ml-12 text-violet-500"><nuxt-link to="/posts">Posts</nuxt-link></p>
+    <p class="text-base flex ml-12 text-violet-500"><nuxt-link to="/posts/upload">Upload New</nuxt-link></p>
   </div>
   <div>
     <h2 class="text-xl font-bold mt-12 flex ml-12">Profile</h2>
     <div v-if="status === 'authenticated'">
-      <nuxt-link :to="'/users/' + session?.user.name" class="text-base flex ml-12 text-violet-500">Profile</nuxt-link>
-      <nuxt-link to="/users/settings" class="text-base flex ml-12 text-violet-500">Settings</nuxt-link>
-      <nuxt-link :to="'/users/' + session?.user.name + '/uploads'" class="text-base flex ml-12 text-violet-500">Uploads</nuxt-link>
-      <nuxt-link :to="'/users/' + session?.user.name + '/shares'" class="text-base flex ml-12 text-violet-500">Shares</nuxt-link>
-      <span @click="signOut({ callbackUrl: '/' })" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Logout</span>
+      <P class="text-base flex ml-12 text-violet-500"><nuxt-link :to="'/users/' + session?.user.name">Profile</nuxt-link></P>
+      <p class="text-base flex ml-12 text-violet-500"><nuxt-link to="/users/settings">Settings</nuxt-link></p>
+      <p class="text-base flex ml-12 text-violet-500"><nuxt-link :to="'/users/' + session?.user.name + '/uploads'">Uploads</nuxt-link></p>
+      <p class="text-base flex ml-12 text-violet-500"><nuxt-link :to="'/users/' + session?.user.name + '/shares'">Shares</nuxt-link></p>
+      <p @click="signOut({ callbackUrl: '/' })" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Logout</p>
     </div>
     <div v-else>
-      <span @click="signIn('')" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Login</span>
+      <p @click="signIn('')" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Login</p>
     </div>
   </div>
 </div>

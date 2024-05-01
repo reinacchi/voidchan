@@ -170,19 +170,19 @@
     </div>
     <br />
     <div class="flex ml-28 items-center text-gray-300">
-      <h2 class="text-lg font-semibold ml-[56px]">Joined At:</h2>
+      <h2 class="text-lg font-semibold ml-[58px]">Joined At:</h2>
       <h2 class="text-lg ml-14">
         {{ moment(user.createdAt).format("DD-MM-YYYY") }}
       </h2>
     </div>
     <br />
-    <div class="flex ml-[112px] items-center text-gray-300">
+    <div class="flex ml-[114px] items-center text-gray-300">
       <h2 class="text-lg font-semibold">Clearance Level:</h2>
       <h2 class="text-lg ml-14">{{ user.clearanceLevel[0] }}</h2>
     </div>
     <br />
     <div class="flex ml-28 items-center text-gray-300">
-      <h2 class="text-lg font-semibold ml-[84px]">Posts:</h2>
+      <h2 class="text-lg font-semibold ml-[86px]">Posts:</h2>
       <h2 class="text-lg ml-14">{{ user.posts.length }}</h2>
     </div>
     <br /><br /><br />
@@ -202,7 +202,7 @@
     </div>
   </div>
   <div class="noselect md:hidden">
-    <h1 class="text-4xl font-bold mt-12 flex ml-12">
+    <h1 class="text-4xl font-bold mt-12 block ml-12">
       {{ user.displayName }}
       <div
         v-if="user.clearanceLevel.includes('Project Lead')"
