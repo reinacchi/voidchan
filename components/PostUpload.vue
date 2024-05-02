@@ -1,9 +1,44 @@
 <template>
   <div class="noselect">
     <h1 class="text-4xl m-5 p-5 font-extrabold">Upload an Image</h1>
-    <div class="flex items-center justify-center w-full">
+    <div class="hidden md:flex items-center justify-center w-full">
       <label
         class="flex flex-col items-center justify-center w-2/6 h-44 border-2 border-violet-900 border-opacity-40 shadow bg-violet-900 bg-opacity-20 rounded-lg cursor-pointer"
+      >
+        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+          <svg
+            class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 20 16"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+            />
+          </svg>
+          <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+            <span class="font-semibold">Click to upload</span> or drag and drop
+          </p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Max Size: 100 MB
+          </p>
+        </div>
+        <input
+          hidden
+          accept=".png,.jpg,.jpeg,.gif,.mp4,.webp,.webm"
+          @change="handleFileUpload"
+          type="file"
+        />
+      </label>
+    </div>
+    <div class="md:hidden flex items-center justify-center w-full">
+      <label
+        class="flex flex-col items-center justify-center w-4/6 h-44 border-2 border-violet-900 border-opacity-40 shadow bg-violet-900 bg-opacity-20 rounded-lg cursor-pointer"
       >
         <div class="flex flex-col items-center justify-center pt-5 pb-6">
           <svg
@@ -387,7 +422,7 @@ useHead({
 
 <style scoped>
 .image-view {
-  max-width: 100%;
+  max-width: 80%;
   border: none !important;
   box-shadow: 0 0 4px 2px rgb(60, 27, 109);
   margin: 20px;
