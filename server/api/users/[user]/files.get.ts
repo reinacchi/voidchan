@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
       uploader: {
         name: profile.name,
       },
-      url: `data:${file.mimetype};base64,${file.buffer}`,
+      url: file.buffer,
     }
   }).reverse();
 });
