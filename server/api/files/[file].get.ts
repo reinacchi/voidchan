@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
       uploader: {
         name: uploader.name,
       },
-      url: `data:${file.mimetype};base64,${file.buffer}`,
+      url: file.buffer,
     };
   } else {
     const profile = await Profile.findOne({ name: session.user.name }) as IProfile;
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
         clearanceLevel: profile.clearanceLevel,
         name: uploader.name,
       },
-      url: `data:${file.mimetype};base64,${file.buffer}`,
+      url: file.buffer,
     };
   }
 

@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   await Files.create({
     id: name,
     date: new Date(),
-    buffer: files[0].buffer.toString("base64"),
+    buffer: `data:${files[0].mimetype};base64,${files[0].buffer.toString("base64")}`,
     mimetype: files[0].mimetype,
     nsfw: false,
     uploader: profile.name,

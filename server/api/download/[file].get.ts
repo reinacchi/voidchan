@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const files = await Files.findOne({ id: file.split(".")[0] }) as IFiles;
 
   if (files) {
-    const image = Buffer.from(files.buffer, "base64");
+    const image = Buffer.from(files.buffer.split(",")[1], "base64");
 
     event.node.res.setHeader("Content-Disposition", `attachment;filename="${file}"`);
     return send(event, image);
