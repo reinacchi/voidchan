@@ -32,11 +32,13 @@ export default defineEventHandler(async (event) => {
   const authKey = generateString(32);
 
   Profile.create({
-    clearanceLevel: ["member"],
+    clearanceLevel: ["Member"],
+    displayName: body.name,
     authKey,
     date: new Date(),
     email: "",
     files: [],
+    posts: [],
     name: body.name,
     password: body.password,
   });
