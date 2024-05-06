@@ -80,7 +80,7 @@
         <Image :src="previewFile" class="image-view" draggable="false" />
         <p>{{ fileSize }} .{{ fileType }}</p>
       </div>
-      <div class="h-[31rem] m-4 w-px bg-violet-500 bg-opacity-20"></div>
+      <div class="h-[27rem] m-4 w-px bg-violet-500 bg-opacity-20"></div>
       <div class="mt-3 ml-2 pr-[5rem]">
         <div class="flex items-center">
           <label for="rating" class="mr-2 text-xl font-semibold">Rating:</label>
