@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const data = Buffer.from(file.buffer, "base64");
+  const data = Buffer.from(file.buffer.split(",")[1], "base64");
 
   event.node.res.setHeader("Content-Type", file.mimetype);
   return send(event, data);
