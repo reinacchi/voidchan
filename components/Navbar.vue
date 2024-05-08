@@ -42,7 +42,7 @@
         <nuxt-link v-if="status === 'authenticated'" @click="toMyProfile" class="text-gray-300 font-sans hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-user mr-1"></i> My Profile</nuxt-link>
         <nuxt-link v-if="status === 'authenticated'" @click="toUpload" class="text-gray-300 font-sans hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-square-plus mr-1"></i> Upload New</nuxt-link>
         <nuxt-link @click="toMore" class="text-gray-300 font-sans hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">More »</nuxt-link>
-        <hr style="border-color: #16101f;">
+        <hr class="border-violet-500 border-opacity-20">
         <span v-if="status === 'unauthenticated'" @click="signIn('')" class="text-gray-300 font-sans hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</span>
         <span v-else @click="signOut({ callbackUrl: '/' })" class="text-gray-300 font-sans hover:text-white block px-3 cursor-pointer py-2 rounded-md text-base font-medium">Logout</span>
       </div>
