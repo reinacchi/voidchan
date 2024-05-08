@@ -1,11 +1,11 @@
 <template>
-  <div class="centered">
-    <h1 class="text-4xl p-5 noselect">
-      Void<span class="font-extrabold">Chan</span>
+  <div class="centered noselect">
+    <h1 class="text-5xl p-5">
+      <span class="text-gray-300 font-sans text-accent font-black tracking-widest">VoidChan</span>
     </h1>
     <div>
       <div v-if="status === 'authenticated'">
-        <p class="noselect">
+        <p>
           Hello, <b>{{ user.displayName }}</b>.
         </p>
       </div>

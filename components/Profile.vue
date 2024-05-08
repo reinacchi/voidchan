@@ -111,7 +111,7 @@
           <span
             class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
           ></span>
-          Plus
+          Plus Account
         </div>
       </div>
       <div
@@ -313,7 +313,7 @@
           <span
             class="arrow-up absolute bottom-full left-1/2 transform -translate-x-1/2"
           ></span>
-          Plus
+          Plus Account
         </div>
       </div>
       <div

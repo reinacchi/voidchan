@@ -8,7 +8,7 @@ body {
 }
 
 .text-accent {
-    background: linear-gradient(to right, #42b893, #7308ff, #42b893, #7308ff);
+    background: linear-gradient(to right, #42b893, #7308ff);
     background-clip: content-box;
     -webkit-text-fill-color: transparent;
     -webkit-background-clip: text;

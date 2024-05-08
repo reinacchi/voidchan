@@ -373,7 +373,6 @@ const fileRating = ref<string | null>(null);
 const fileCharacters = ref<string>("");
 const fileSource = ref<string>("");
 const fileTags = ref<string>("");
-const {} = await useFetch(`/api/users/${(data as any).value?.user.name}`);
 
 function handleFileUpload(event: Event) {
   file.value = (event.target as HTMLInputElement).files;
