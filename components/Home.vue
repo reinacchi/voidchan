@@ -1,7 +1,7 @@
 <template>
   <div class="centered">
     <h1 class="text-4xl p-5 noselect">
-      <span class="font-extrabold">VoidChan</span>
+      Void<span class="font-extrabold">Chan</span>
     </h1>
     <div>
       <div v-if="status === 'authenticated'">

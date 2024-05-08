@@ -14,10 +14,10 @@
       <p class="text-base flex ml-12 text-violet-500"><nuxt-link to="/users/settings">Settings</nuxt-link></p>
       <p class="text-base flex ml-12 text-violet-500"><nuxt-link :to="'/users/' + session?.user.name + '/uploads'">Uploads</nuxt-link></p>
       <p class="text-base flex ml-12 text-violet-500"><nuxt-link :to="'/users/' + session?.user.name + '/shares'">Shares</nuxt-link></p>
-      <p @click="signOut({ callbackUrl: '/' })" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Logout</p>
+      <button @click="signOut({ callbackUrl: '/' })" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Logout</button>
     </div>
     <div v-else>
-      <p @click="signIn('')" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Login</p>
+      <button @click="signIn('')" class="text-base hover:underline cursor-pointer flex ml-12 text-violet-500">Login</button>
     </div>
   </div>
 </div>
