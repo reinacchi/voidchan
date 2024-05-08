@@ -4,7 +4,7 @@
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <nuxt-link to="/"><img class="h-16 w-16" src="../assets/img/voidchan.png" draggable="false"></nuxt-link>
+            <nuxt-link to="/"><img class="h-14 w-14" src="../assets/img/voidchan.png" draggable="false"></nuxt-link>
           </div>
           <div class="ml-4 text-white">
             <nuxt-link class="hover:no-underline" to="/"><span class="text-xl">Void</span><span class="text-xl font-extrabold">Chan</span></nuxt-link>
