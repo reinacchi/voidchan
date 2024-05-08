@@ -3,6 +3,7 @@
     <Navbar />
     <NuxtLoadingIndicator color="#7308ff" :duration="10000" />
     <NuxtPage />
+    <Toaster position="top-center" theme="dark" richColors closeButton />
   </div>
 </template>
 

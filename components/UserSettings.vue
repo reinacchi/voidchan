@@ -26,8 +26,8 @@
           <div class="w-full max-w-sm shadow border border- border-violet-900 border-opacity-60 rounded-2xl px-8 pt-6 pb-8 mb-4">
             <label class="block text-2xl font-bold mb-2">Authentication Key</label>
             <p class="mb-5 text-sm">Your authentication key is utilised for accessing VoidChan's ShareX uploader. <br><b>Keep your key confidential! Use the "Reset Key" to reset your authentication key.</b></p>
-            <button @click="copyAuth" class="btn mx-2"><span class="far fa-clipboard"></span> {{ copiedAuth ? "Key Copied!" : "Copy Key" }}</button>
-            <button @click="resetKey" style="border-color: #ad0c00;" class="btn mx-2"><span class="fas fa-exclamation-triangle"></span> {{ resetAuth ? "Key Reset!" : "Reset Key" }}</button>
+            <button @click="copyAuth" class="btn mx-2"><span class="far fa-clipboard"></span> Copy Key</button>
+            <button @click="resetKey" style="border-color: #ad0c00;" class="btn mx-2"><span class="fas fa-exclamation-triangle"></span> Reset Key</button>
           </div>
           <button class="btn mx-2" @click.prevent="$router.go(-1)">Back</button>
     </center>
@@ -37,15 +37,13 @@
 <script setup lang="ts">
 const config = useAppConfig();
 const password = ref(undefined);
-const copiedAuth = ref(false);
-const resetAuth = ref(false);
 const newKey = ref<string | undefined>(undefined);
 const { data } = useAuth();
+const { $toast } = useNuxtApp();
 
 function resetKey() {
   newKey.value = generateString(32);
 
-  resetAuth.value = true;
   $fetch(`/api/users/${data.value?.user?.name}`, {
     method: "PATCH",
     headers: {
@@ -56,14 +54,12 @@ function resetKey() {
     }),
   });
 
-  setTimeout(() => {
-    resetAuth.value = false;
-  }, 1500);
+  $toast.success("Authentication successfully reset!");
 }
 
 function updateSettings() {
   if (password.value === undefined) {
-    return;
+    return $toast.error("Please type your new password!");
   }
 
   $fetch(`/api/users/${data.value?.user?.name}`, {
@@ -77,6 +73,7 @@ function updateSettings() {
   });
 
   password.value = undefined;
+  $toast.success("Password changed successfully!");
 }
 
 async function copyAuth() {
@@ -89,13 +86,8 @@ async function copyAuth() {
 
   if (newKey.value === undefined) newKey.value = (key.value as any).auth;
 
-  navigator.clipboard.writeText(newKey.value as string).then(() => {
-    copiedAuth.value = true;
-
-    setTimeout(() => {
-      copiedAuth.value = false;
-    }, 1500)
-  })
+  navigator.clipboard.writeText(newKey.value as string);
+  $toast.info("Authentication key copied!");
 }
 
 useHead({

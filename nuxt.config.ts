@@ -7,6 +7,9 @@ export default defineNuxtConfig({
     PrivateAuth: process.env.PRIVATE_AUTH,
     MongoDB: process.env.MONGODB_URI,
   },
+  build: {
+    transpile: ["vue-sonner"],
+  },
   modules: [
     "@nuxtjs/tailwindcss",
     "@huntersofbook/naive-ui-nuxt",

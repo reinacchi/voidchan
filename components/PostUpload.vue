@@ -373,6 +373,7 @@ const fileRating = ref<string | null>(null);
 const fileCharacters = ref<string>("");
 const fileSource = ref<string>("");
 const fileTags = ref<string>("");
+const { $toast } = useNuxtApp();
 
 function handleFileUpload(event: Event) {
   file.value = (event.target as HTMLInputElement).files;
@@ -392,14 +393,14 @@ async function handleFileSubmit() {
   if (file.value) {
     Array.from(file.value).forEach((value) => {
       if (value.size > 104857600) {
-        return alert("The image size is too big.");
+        return $toast.warning("The image size is too big!");
       }
 
       formData.append(value.name.split(".")[0], value);
     });
   }
 
-  if (!file.value) return alert("No file uploaded!");
+  if (!file.value) return $toast.error("No file uploaded!");
 
   await $fetch("/api/posts/upload", {
     method: "POST",
