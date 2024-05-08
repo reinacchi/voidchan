@@ -17,4 +17,8 @@
 /* @ts-ignore */
 const { data, status} = useAuth();
 const { data: user } = status.value === "authenticated" ? await useFetch(`/api/users/${data.value?.user?.name}`): {} as any;
+
+useHead({
+  title: "VoidChan"
+});
 </script>
