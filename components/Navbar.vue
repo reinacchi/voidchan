@@ -1,6 +1,6 @@
 <template>
-  <nav style="background-color: #251a36;">
-    <div class="noselect max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+  <nav class="max-w-full bg-[#251a36]">
+    <div class="noselect max-w-full mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center">
           <div class="flex-shrink-0">
