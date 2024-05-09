@@ -1,7 +1,21 @@
 <template>
   <div class="hidden noselect md:block">
     <h1 class="text-4xl font-bold mt-12 flex items-center ml-10">
-      <span :class="{'text-accent': user.clearanceLevel[0] === 'Project Lead', 'text-teal-500': user.clearanceLevel[0] === 'Developer', 'text-red-500': user.clearanceLevel[0] === 'Moderator', 'text-orange-500': user.clearanceLevel[0] === 'Nominator', 'text-green-500': user.clearanceLevel[0] === 'Contributor', 'text-blue-500': user.clearanceLevel[0] === 'Verified', 'text-yellow-500': user.clearanceLevel[0] === 'Plus', 'text-pink-500': user.clearanceLevel[0] === 'Supporter', 'text-gray-500': user.clearanceLevel[0] === 'Alumni'}" class="font-sans">{{ user.displayName }}</span>
+      <span
+        :class="{
+          'text-accent': user.clearanceLevel[0] === 'Project Lead',
+          'text-teal-500': user.clearanceLevel[0] === 'Developer',
+          'text-red-500': user.clearanceLevel[0] === 'Moderator',
+          'text-orange-500': user.clearanceLevel[0] === 'Nominator',
+          'text-green-500': user.clearanceLevel[0] === 'Contributor',
+          'text-blue-500': user.clearanceLevel[0] === 'Verified',
+          'text-yellow-500': user.clearanceLevel[0] === 'Plus',
+          'text-pink-500': user.clearanceLevel[0] === 'Supporter',
+          'text-gray-500': user.clearanceLevel[0] === 'Alumni',
+        }"
+        class="font-sans"
+        >{{ user.displayName }}</span
+      >
       <div
         v-if="user.clearanceLevel.includes('Project Lead')"
         class="relative group inline-block ml-2"
@@ -188,7 +202,21 @@
   </div>
   <div class="noselect md:hidden">
     <h1 class="text-3xl font-bold mt-12 block ml-6 text-left">
-      <span :class="{'text-accent': user.clearanceLevel[0] === 'Project Lead', 'text-teal-500': user.clearanceLevel[0] === 'Developer', 'text-red-500': user.clearanceLevel[0] === 'Moderator', 'text-orange-500': user.clearanceLevel[0] === 'Nominator', 'text-green-500': user.clearanceLevel[0] === 'Contributor', 'text-blue-500': user.clearanceLevel[0] === 'Verified', 'text-yellow-500': user.clearanceLevel[0] === 'Plus', 'text-pink-500': user.clearanceLevel[0] === 'Supporter', 'text-gray-500': user.clearanceLevel[0] === 'Alumni'}" class="font-sans">{{ user.displayName }}</span>
+      <span
+        :class="{
+          'text-accent': user.clearanceLevel[0] === 'Project Lead',
+          'text-teal-500': user.clearanceLevel[0] === 'Developer',
+          'text-red-500': user.clearanceLevel[0] === 'Moderator',
+          'text-orange-500': user.clearanceLevel[0] === 'Nominator',
+          'text-green-500': user.clearanceLevel[0] === 'Contributor',
+          'text-blue-500': user.clearanceLevel[0] === 'Verified',
+          'text-yellow-500': user.clearanceLevel[0] === 'Plus',
+          'text-pink-500': user.clearanceLevel[0] === 'Supporter',
+          'text-gray-500': user.clearanceLevel[0] === 'Alumni',
+        }"
+        class="font-sans"
+        >{{ user.displayName }}</span
+      >
       <div
         v-if="user.clearanceLevel.includes('Project Lead')"
         class="relative group inline-block ml-2"
