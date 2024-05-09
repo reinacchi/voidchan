@@ -39,6 +39,7 @@ const fileParam = useRoute().params.file as string;
 const { data, status } = useAuth();
 const { data: file } = useFetch(`/raw/${fileParam}`);
 const { data: files } = await useAsyncData("files", () => $fetch(`/api/files/${fileParam.split(".")[0]}`)) as any;
+const { $toast } = useNuxtApp();
 const config = useRuntimeConfig();
 
 async function refreshPage() {
@@ -52,11 +53,13 @@ function deleteImage() {
     method: "DELETE",
   });
 
-  window.location.href = "/";
+  useRouter().push("/");
+  $toast.success(`File '${files.value.id}' successfully deleted!`);
 }
 
 function downloadImage() {
   window.location.href = `/api/download/${fileParam}`;
+  $toast.info(`File '${files.value.id}' downloaded!`);
 }
 
 function markNSFW(val: boolean) {

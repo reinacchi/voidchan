@@ -401,6 +401,7 @@ async function handleFileSubmit() {
   }
 
   if (!file.value) return $toast.error("No file uploaded!");
+  if (!fileRating.value) return $toast.error("Please choose the rating of the file selected!");
 
   await $fetch("/api/posts/upload", {
     method: "POST",
