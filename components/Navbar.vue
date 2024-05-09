@@ -4,10 +4,10 @@
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <nuxt-link @click="isOpen = !isOpen" to="/"><img class="h-14 w-14" src="../assets/img/voidchan.png" draggable="false"></nuxt-link>
+            <nuxt-link @click="isOpen = false" to="/"><img class="h-14 w-14" src="../assets/img/voidchan.png" draggable="false"></nuxt-link>
           </div>
           <div class="ml-4 text-white">
-            <nuxt-link @click="isOpen = !isOpen" class="hover:no-underline" to="/"><span class="text-xl text-gray-300 font-sans font-black">VoidChan</span></nuxt-link>
+            <nuxt-link @click="isOpen = false" class="hover:no-underline" to="/"><span class="text-xl text-gray-300 font-sans font-black">VoidChan</span></nuxt-link>
           </div>
           <div class="hidden md:block">
             <div class="ml-10 flex items-baseline space-x-2">
