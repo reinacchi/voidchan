@@ -4,10 +4,10 @@
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <nuxt-link to="/"><img class="h-14 w-14" src="../assets/img/voidchan.png" draggable="false"></nuxt-link>
+            <nuxt-link @click="isOpen = !isOpen" to="/"><img class="h-14 w-14" src="../assets/img/voidchan.png" draggable="false"></nuxt-link>
           </div>
           <div class="ml-4 text-white">
-            <nuxt-link class="hover:no-underline" to="/"><span class="text-xl text-gray-300 font-sans font-black">VoidChan</span></nuxt-link>
+            <nuxt-link @click="isOpen = !isOpen" class="hover:no-underline" to="/"><span class="text-xl text-gray-300 font-sans font-black">VoidChan</span></nuxt-link>
           </div>
           <div class="hidden md:block">
             <div class="ml-10 flex items-baseline space-x-2">
@@ -59,17 +59,22 @@ function toggleMenu() {
 }
 function toPosts() {
   useRouter().push("/posts");
+  isOpen.value = false;
 }
 function toMyShares() {
   useRouter().push(`/users/${data?.value?.user?.name}/shares`);
+  isOpen.value = false;
 }
 function toMyProfile() {
   useRouter().push(`/users/${data?.value?.user?.name}`);
+  isOpen.value = false;
 }
 function toUpload() {
   useRouter().push("/posts/upload");
+  isOpen.value = false;
 }
 function toMore() {
   useRouter().push("/sitemap");
+  isOpen.value = false;
 }
 </script>
