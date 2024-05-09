@@ -187,7 +187,7 @@
     </div>
   </div>
   <div class="noselect md:hidden">
-    <h1 class="text-3xl font-bold mt-12 block ml-2">
+    <h1 class="text-3xl font-bold mt-12 block ml-6 text-left">
       {{ user.displayName }}
       <div
         v-if="user.clearanceLevel.includes('Project Lead')"
@@ -400,6 +400,7 @@ th {
   width: 15%;
   text-align: right;
   padding-right: 1em;
+  line-height: 2rem;
 }
 
 td {
