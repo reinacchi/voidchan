@@ -4,7 +4,7 @@ import { getServerSession } from "#auth";
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event) as any;
-  const file = getRouterParam(event, "file") as string;
+  const fileID = getRouterParam(event, "file") as string;
 
   if (!session) {
     return {
@@ -14,10 +14,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const profile = await Profile.findOne({ name: session?.user?.name }) as IProfile;
-  const uploader = await Profile.find({ files: file });
+  const file = await Files.findOne({ id: fileID });
 
-  if (profile.clearanceLevel.includes("Moderator")) {
-    await Profile.findOneAndUpdate({ name: uploader[0].name }, { $pull: { files: file } });
-    await Files.findOneAndDelete({ id: file });
+  if (profile.name === file?.uploader) {
+    await Profile.findOneAndUpdate({ name: file.uploader }, { $pull: { files: fileID } });
+    await Files.findOneAndDelete({ id: fileID });
   }
 });
