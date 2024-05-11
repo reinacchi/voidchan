@@ -28,6 +28,9 @@
       <li><h2 class="text-xl font-bold text-left">Users</h2></li>
       <li class="text-base text-violet-500 text-left"><nuxt-link to="/users">Users</nuxt-link></li>
     </ul>
+    <ul v-if="staffOnly && status === 'authenticated'">
+      <li><h2 class="text-xl font-bold text-left">Staff Only</h2></li>
+    </ul>
   </section>
 </div>
 <div class="md:hidden space-y-6 ml-12 mt-12">
@@ -63,7 +66,13 @@
 </template>
 
 <script setup lang="ts">
+import { checkPermission } from '~~/utils/checkPermission';
+
 const { data: session, signIn, signOut, status } = useAuth() as any;
+const { data: user } = status.value === "authenticated" ? await useFetch(`/api/users/${session.value?.user?.name}`): {} as any;
+const devOnly = status.value === "authenticated" ? await checkPermission(user.value.clearanceLevel, ["Project Lead", "Developer"]) : false;
+const modOnly = status.value === "authenticated" ? await checkPermission(user.value.clearanceLevel, ["Project Lead", "Developer", "Moderator"]) : false;
+const staffOnly = status.value === "authenticated" ? await checkPermission(user.value.clearanceLevel, ["Project Lead", "Developer", "Moderator", "Nominator"]) : false;
 
 useHead({
   title: "Site Map | VoidChan"
