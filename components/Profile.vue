@@ -177,6 +177,10 @@
             <td class="text-lg">{{ user.clearanceLevel[0] }}</td>
           </tr>
           <tr>
+            <th class="text-gray-300 text-lg font-semibold">Kudos:</th>
+            <td class="text-lg">{{ user.kudos }}</td>
+          </tr>
+          <tr>
             <th class="text-gray-300 text-lg font-semibold">Posts:</th>
             <td class="text-lg">{{ user.posts.length }}</td>
           </tr>
@@ -376,6 +380,10 @@
               Clearance Level:
             </th>
             <td class="text-sm">{{ user.clearanceLevel[0] }}</td>
+          </tr>
+          <tr>
+            <th class="text-gray-300 text-sm font-semibold">Kudos:</th>
+            <td class="text-sm">{{ user.kudos }}</td>
           </tr>
           <tr>
             <th class="text-gray-300 text-sm font-semibold">Posts:</th>

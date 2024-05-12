@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
       return {
         clearanceLevel: user.clearanceLevel,
         auth: user.authKey,
-        createdAt: user.date,
+        createdAt: user.createdAt,
         displayName: user.displayName,
         email: user.email,
         name: user.name,
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
     return users.map((user) => {
       return {
         clearanceLevel: user.clearanceLevel,
-        createdAt: user.date,
+        createdAt: user.createdAt,
         displayName: user.displayName,
         name: user.name,
         posts: user.posts

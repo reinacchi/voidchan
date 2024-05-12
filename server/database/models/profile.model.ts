@@ -5,8 +5,9 @@ export type ClearanceLevel = "Project Lead" | "Developer" | "Moderator" | "Nomin
 export interface IProfile {
   authKey: string;
   clearanceLevel: ClearanceLevel[];
-  date: Date;
+  createdAt: Date;
   displayName: string;
+  kudos: number;
   email: string;
   files: string[];
   password: string;
@@ -24,7 +25,7 @@ const profileSchema = new Schema<IProfile>({
     type: Schema.Types.String,
     required: true,
   },
-  date: {
+  createdAt: {
     type: Schema.Types.Date,
     default: new Date(),
     required: true,
@@ -32,6 +33,11 @@ const profileSchema = new Schema<IProfile>({
   displayName: {
     type: Schema.Types.String,
     required: false,
+  },
+  kudos: {
+    type: Schema.Types.Number,
+    default: 0,
+    required: true,
   },
   email: {
     type: Schema.Types.String,

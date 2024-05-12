@@ -34,8 +34,9 @@ export default defineEventHandler(async (event) => {
   Profile.create({
     clearanceLevel: ["Member"],
     displayName: body.name,
+    kudos: 0,
     authKey,
-    date: new Date(),
+    createdAt: new Date(),
     email: "",
     files: [],
     posts: [],

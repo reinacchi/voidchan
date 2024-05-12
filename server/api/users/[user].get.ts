@@ -10,19 +10,21 @@ export default defineEventHandler(async (event) => {
     return {
       clearanceLevel: profile.clearanceLevel,
       auth: profile.authKey,
-      createdAt: profile.date,
+      createdAt: profile.createdAt,
       displayName: profile.displayName,
       email: profile.email,
       name: profile.name,
       posts: profile.posts,
+      kudos: profile.kudos,
     }
   } else {
     return {
       clearanceLevel: profile.clearanceLevel,
-      createdAt: profile.date,
+      createdAt: profile.createdAt,
       displayName: profile.displayName,
       name: profile.name,
       posts: profile.posts,
+      kudos: profile.kudos,
     }
   }
 });
