@@ -59,6 +59,9 @@
       <li><h2 class="text-xl font-bold text-left">Users</h2></li>
       <li class="text-base text-violet-500 text-left"><nuxt-link to="/users">Users</nuxt-link></li>
     </ul>
+    <ul v-if="staffOnly && status === 'authenticated'">
+      <li><h2 class="text-xl font-bold text-left">Staff Only</h2></li>
+    </ul>
     </section>
 
   </div>

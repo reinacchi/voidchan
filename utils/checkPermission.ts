@@ -3,8 +3,8 @@ import { ClearanceLevel } from "~~/server/database/models/profile.model";
 /**
  *
  * @param userID The username
- * @param The clearance levelsof the user
- * @param levels The clearance levels to check (in array)
+ * @param userLevels The clearance levelsof the user
+ * @param levels The clearance levels to check
  * @returns {boolean}
  */
 export function checkPermission(userLevels: ClearanceLevel[], levels: ClearanceLevel[]): boolean {

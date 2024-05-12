@@ -1,6 +1,6 @@
 <template>
 <div class="noselect md:block">
-  <h1 class="text-4xl font-bold mt-12 ml-12 text-left ">Users</h1>
+  <h1 class="text-4xl font-bold mt-12 ml-12 text-left">Users</h1>
   <div class="mx-10 w-5/6 m-5">
     <div class="overflow-x-auto">
       <table class="min-w-full border-violet-900 border shadow-full bg-violet-900 bg-opacity-20">
