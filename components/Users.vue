@@ -12,13 +12,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in users" :key="user.name">
+          <tr v-for="user in currentPageUsers" :key="user.name">
             <td class="text-left border-t border-violet-900 px-4 py-2"><nuxt-link class="text-violet-500" :to="'/users/' + user.name">{{ user.name }}</nuxt-link></td>
             <td class="text-left border-t border-violet-900 px-4 py-2">{{ user.clearanceLevel[0] }}</td>
             <td class="text-left border-t border-violet-900 px-4 py-2">{{ moment(user.createdAt).format("DD-MM-YYYY HH:MM") }}</td>
           </tr>
         </tbody>
       </table>
+    </div>
+    <div class="p-5 space-x-3 flex">
+      <button class="btn" @click="previousPage" :disabled="currentPage === 1">Previous</button>
+      <button class="btn" @click="nextPage" :disabled="currentPage === totalPages">Next</button>
     </div>
   </div>
 </div>
@@ -28,6 +32,29 @@
 import moment from "moment";
 
 const { data: users } = await useAsyncData("users", () => $fetch(`/api/users`));
+const usersPerPage = 25;
+const totalUsers = users.value?.length;
+const currentPage = ref(1);
+
+const totalPages = computed(() => Math.ceil((totalUsers as number) / usersPerPage));
+const currentPageUsers = computed(() => {
+  const startIndex = (currentPage.value - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+
+  return users.value?.slice(startIndex, endIndex);
+});
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+}
+
+function previousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+}
 
 useHead({
   title: "Users | VoidChan"
