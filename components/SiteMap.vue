@@ -28,13 +28,17 @@
       <li><h2 class="text-xl font-bold text-left">Users</h2></li>
       <li class="text-base text-violet-500 text-left"><nuxt-link to="/users">Users</nuxt-link></li>
     </ul>
+    <ul>
+      <li><h2 class="text-xl font-bold text-left">Site</h2></li>
+      <li class="text-base text-violet-500 text-left"><a href="https://github.com/reinacchi/voidchan" target="_blank">GitHub Source Code</a></li>
+    </ul>
     <ul v-if="staffOnly && status === 'authenticated'">
       <li><h2 class="text-xl font-bold text-left">Staff Only</h2></li>
     </ul>
   </section>
 </div>
 <div class="md:hidden space-y-6 ml-12 mt-12">
-    <section class="flex-auto space-y-6">
+  <section class="flex-auto space-y-6">
     <ul>
       <li><h2 class="text-xl font-bold text-left">Posts</h2></li>
       <li class="text-base text-violet-500 text-left"><nuxt-link to="/posts">Posts</nuxt-link></li>
@@ -58,6 +62,10 @@
     <ul>
       <li><h2 class="text-xl font-bold text-left">Users</h2></li>
       <li class="text-base text-violet-500 text-left"><nuxt-link to="/users">Users</nuxt-link></li>
+    </ul>
+    <ul>
+      <li><h2 class="text-xl font-bold text-left">Site</h2></li>
+      <li class="text-base text-violet-500 text-left"><a href="https://github.com/reinacchi/voidchan" target="_blank">GitHub Source Code</a></li>
     </ul>
     <ul v-if="staffOnly && status === 'authenticated'">
       <li><h2 class="text-xl font-bold text-left">Staff Only</h2></li>
