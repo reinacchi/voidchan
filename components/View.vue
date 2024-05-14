@@ -8,8 +8,7 @@
       <h1 style="margin-top: 5%;" class="text-3xl font-extrabold noselect">{{ fileParam }}</h1>
       <br class="noselect" ondragstart="return false" draggable="false">
       <div class="image-view">
-        <Image v-if="files?.nsfw" class="nsfw noselect" ondragstart="return false" draggable="false" :src="files.url" />
-        <Image v-else class="noselect" ondragstart="return false" draggable="false" :src="files?.url" />
+        <Image :class="{'nsfw': nsfwFile}" class="noselect" ondragstart="return false" draggable="false" :src="files.url" />
       </div>
       <p class="noselect">Uploaded by <nuxt-link class="text-violet-500" :to="'/users/' + files?.uploader?.name"><b>{{ files?.uploader?.name }}</b></nuxt-link> at <b>{{ moment(files?.date).format("D/MM/YY, h:mm:ss A") }}</b></p>
       <br class="noselect" ondragstart="return false" draggable="false">
@@ -22,8 +21,7 @@
         <div v-if="data?.user?.name === files?.uploader?.name">
           <h2 class="text-2xl p-5 font-bold noselect">Manage Your File</h2>
           <button class="btn mx-2 noselect" style="border-color: #ad0c00;" @click="deleteImage()"><i class="fas fa-trash-alt"></i> Delete Image</button>
-          <button v-if="files?.nsfw" class="btn mx-2 noselect" style="border-color: #d8e43a;" @click="markNSFW(false)"><i class="fas fa-ban"></i> Mark as non-NSFW</button>
-          <button v-else class="btn mx-2 noselect" style="border-color: #d8e43a;" @click="markNSFW(true)"><i class="fas fa-ban"></i> Mark as NSFW</button>
+          <button class="btn mx-2 noselect" style="border-color: #d8e43a;" @click="markNSFW(!nsfwFile)"><i class="fas fa-ban"></i> {{ nsfwFile ? 'Mark as Non-NSFW' : 'Mark as NSFW' }}</button>
           <br class="noselect" ondragstart="return false" draggable="false">
           <br class="noselect" ondragstart="return false" draggable="false">
         </div>
@@ -41,12 +39,7 @@ const { data: file } = useFetch(`/raw/${fileParam}`);
 const { data: files } = await useAsyncData("files", () => $fetch(`/api/files/${fileParam.split(".")[0]}`)) as any;
 const { $toast } = useNuxtApp();
 const config = useRuntimeConfig();
-
-async function refreshPage() {
-  try {
-    await refreshNuxtData();
-  } finally {}
-}
+const nsfwFile = ref<boolean>(files.value.nsfw);
 
 function deleteImage() {
   useFetch(`/api/files/${fileParam.split(".")[0]}`, {
@@ -70,7 +63,7 @@ function markNSFW(val: boolean) {
     }),
   });
 
-  window.location.reload();
+  nsfwFile.value = val;
 }
 
 useHead({
