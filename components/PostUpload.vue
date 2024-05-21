@@ -410,9 +410,9 @@ async function handleFileSubmit() {
       fileRating: fileRating.value,
       fileSize: file.value[0].size,
       fileType: file.value[0].type,
-      fileCharacters: fileCharacters.value.split(" "),
+      fileCharacters: fileCharacters.value.trim().split(/\s+/),
       fileSource: fileSource.value,
-      fileTags: fileTags.value.split(" "),
+      fileTags: fileTags.value.trim().split(/\s+/),
     },
   }).then(() => useRouter().push("/posts"));
 }

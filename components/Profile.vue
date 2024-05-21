@@ -152,15 +152,15 @@
           <tr>
             <th class="text-gray-300 text-lg font-semibold">Username:</th>
             <td class="text-lg">
-              {{ user.name }}
-              <span v-if="session?.user.name === user.name">
+              {{ user.username }}
+              <span v-if="session?.user.name === user.username">
                 (<nuxt-link to="/settings" class="text-violet-500"
                   >edit</nuxt-link
                 >)
               </span>
             </td>
           </tr>
-          <tr v-if="session?.user.name === user.name">
+          <tr v-if="session?.user.name === user.username">
             <th class="text-gray-300 text-lg font-semibold">Email:</th>
             <td class="text-lg">{{ session?.user.email }}</td>
           </tr>
@@ -182,7 +182,7 @@
           </tr>
           <tr>
             <th class="text-gray-300 text-lg font-semibold">Posts:</th>
-            <td class="text-lg">{{ user.posts.length }}</td>
+            <td class="text-lg">{{ user.posts }}</td>
           </tr>
         </tbody>
       </table>
@@ -357,15 +357,15 @@
           <tr>
             <th class="text-gray-300 text-sm font-semibold">Username:</th>
             <td class="text-sm">
-              {{ user.name }}
-              <span v-if="session?.user.name === user.name">
+              {{ user.username }}
+              <span v-if="session?.user.name === user.username">
                 (<nuxt-link to="/settings" class="text-violet-500"
                   >edit</nuxt-link
                 >)
               </span>
             </td>
           </tr>
-          <tr v-if="session?.user.name === user.name">
+          <tr v-if="session?.user.name === user.username">
             <th class="text-gray-300 text-sm font-semibold">Email:</th>
             <td class="text-sm">{{ session?.user.email }}</td>
           </tr>
@@ -387,7 +387,7 @@
           </tr>
           <tr>
             <th class="text-gray-300 text-sm font-semibold">Posts:</th>
-            <td class="text-sm">{{ user.posts.length }}</td>
+            <td class="text-sm">{{ user.posts }}</td>
           </tr>
         </tbody>
       </table>
@@ -427,7 +427,7 @@ const { data: posts } = await useAsyncData("posts", () =>
 );
 
 useHead({
-  title: `${user.value.name} | VoidChan`,
+  title: `${user.value.username} | VoidChan`,
 });
 </script>
 

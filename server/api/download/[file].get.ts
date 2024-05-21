@@ -1,13 +1,14 @@
-import { Files, IFiles } from "~~/server/database/models/files.model";
+import getConnection from "~~/server/database";
 
 export default defineEventHandler(async (event) => {
-  const file = getRouterParam(event, "file") as string;
-  const files = await Files.findOne({ id: file.split(".")[0] }) as IFiles;
+  const fileParam = getRouterParam(event, "file") as string;
+  const conn = await getConnection();
+  const file = await conn.query("SELECT * FROM files WHERE id = ?", [fileParam.split(".")[0]]);
 
-  if (files) {
-    const image = Buffer.from(files.buffer.split(",")[1], "base64");
+  if (file[0]) {
+    const image = Buffer.from(file[0].buffer.split(",")[1], "base64");
 
-    event.node.res.setHeader("Content-Disposition", `attachment;filename="${file}"`);
+    event.node.res.setHeader("Content-Disposition", `attachment;filename="${fileParam}"`);
     return send(event, image);
   } else {
     return {

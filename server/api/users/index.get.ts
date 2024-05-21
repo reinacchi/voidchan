@@ -1,31 +1,64 @@
-import { IProfile, Profile } from "~~/server/database/models/profile.model";
+import getConnection, { IUser } from "~~/server/database";
 
 const config = useRuntimeConfig();
 
 export default defineEventHandler(async (event) => {
-  const users = (await Profile.find({})) as IProfile[];
+  const conn = await getConnection();
+  const users = (await conn.query("SELECT * FROM users")) as IUser[];
 
   if (event.node.req.headers.authorization === config.PrivateAuth) {
-    return users.map((user) => {
-      return {
-        clearanceLevel: user.clearanceLevel,
-        auth: user.authKey,
-        createdAt: user.createdAt,
-        displayName: user.displayName,
-        email: user.email,
-        name: user.name,
-        posts: user.posts,
-      };
+    const promises = await users.map(async (user) => {
+      return conn.query(
+        "SELECT * FROM files WHERE uploader = ?",
+        [user.username]
+      ).then((userFiles) => {
+        return conn.query(
+          "SELECT * FROM posts WHERE uploader = ?",
+          [user.username]
+        ).then((userPosts) => {
+          return {
+            id: user.id,
+            clearanceLevels: JSON.parse(user.clearanceLevels) as string[],
+            createdAt: user.createdAt,
+            auth: user.authKey,
+            email: user.email,
+            displayName: user.displayName,
+            username: user.username,
+            kudos: user.kudos,
+            files: userFiles.length as number,
+            posts: userPosts.length as number,
+          };
+        });
+      });
     });
+    const data = await Promise.all(promises).then((res) => res);
+
+    return data;
   } else {
-    return users.map((user) => {
-      return {
-        clearanceLevel: user.clearanceLevel,
-        createdAt: user.createdAt,
-        displayName: user.displayName,
-        name: user.name,
-        posts: user.posts
-      };
+    const promises = await users.map(async (user) => {
+      return conn.query(
+        "SELECT * FROM files WHERE uploader = ?",
+        [user.username]
+      ).then((userFiles) => {
+        return conn.query(
+          "SELECT * FROM posts WHERE uploader = ?",
+          [user.username]
+        ).then((userPosts) => {
+          return {
+            id: user.id,
+            clearanceLevels: JSON.parse(user.clearanceLevels) as string[],
+            createdAt: user.createdAt,
+            displayName: user.displayName,
+            username: user.username,
+            kudos: user.kudos,
+            files: userFiles.length as number,
+            posts: userPosts.length as number,
+          };
+        });
+      });
     });
+    const data = await Promise.all(promises).then((res) => res);
+
+    return data;
   }
 });

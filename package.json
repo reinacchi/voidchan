@@ -30,6 +30,7 @@
   "dependencies": {
     "busboy": "^1.6.0",
     "image-size": "^1.0.2",
+    "mariadb": "^3.3.0",
     "mime": "^3.0.0",
     "moment": "^2.29.4",
     "mongoose": "^6.9.1",

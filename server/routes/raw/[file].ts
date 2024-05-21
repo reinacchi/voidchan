@@ -1,19 +1,20 @@
 import mime from "mime";
-import { Files, IFiles } from "~~/server/database/models/files.model";
+import getConnection from "~~/server/database";
 
 export default defineEventHandler(async (event) => {
   const fileID = getRouterParam(event, "file") as string;
-  const file = await Files.findOne({ id: fileID.split(".")[0] }) as IFiles;
+  const conn = await getConnection();
+  const file = await conn.query("SELECT * FROM files WHERE id = ?", [fileID.split(".")[0]])
 
-  if (!file) {
+  if (!file[0]) {
     return {
       code: 404,
       message: "Unknown File"
     }
   }
 
-  const mimeType = mime.getExtension(file.mimetype);
-  const fileName = `${fileID.split(".")[0]}.${mimeType}`;
+  const mimeType = mime.getExtension(file[0].mimetype);
+  const fileName = `${file[0].id}.${mimeType}`;
 
   if (fileID !== fileName) {
     return {
@@ -22,8 +23,8 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const data = Buffer.from(file.buffer.split(",")[1], "base64");
+  const data = Buffer.from(file[0].buffer.split(",")[1], "base64");
 
-  event.node.res.setHeader("Content-Type", file.mimetype);
+  event.node.res.setHeader("Content-Type", file[0].mimetype);
   return send(event, data);
 });

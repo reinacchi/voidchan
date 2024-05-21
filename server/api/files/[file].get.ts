@@ -1,15 +1,15 @@
-import { Files, IFiles } from "~~/server/database/models/files.model";
-import { IProfile, Profile } from "~~/server/database/models/profile.model";
+import getConnection from "~~/server/database";
 import mime from "mime";
 import { getServerSession } from "#auth";
 
 export default defineEventHandler(async (event) => {
   const fileID = getRouterParam(event, "file") as string;
-  const file = await Files.findOne({ id: fileID }) as IFiles;
   const session = await getServerSession(event) as any;
-  const uploader = await Profile.findOne({ name: file.uploader }) as IProfile;
+  const conn = await getConnection();
+  const file = await conn.query("SELECT * FROM files WHERE id = ?", [fileID]);
+  const uploader = await conn.query("SELECT * FROM users WHERE username = ?", [file[0].uploader]);
 
-  if (!file) {
+  if (!file[0]) {
     return {
       code: 404,
       message: "Unknown File"
@@ -18,28 +18,28 @@ export default defineEventHandler(async (event) => {
 
   if (!session) {
     return {
-      id: file.id,
-      date: file.date,
-      ext: mime.getExtension(file.mimetype),
-      nsfw: file.nsfw,
+      id: file[0].id,
+      date: file[0].date,
+      ext: mime.getExtension(file[0].mimetype),
+      nsfw: file[0].nsfw ? true : false,
       uploader: {
-        name: uploader.name,
+        name: uploader[0].username,
       },
-      url: file.buffer,
+      url: file[0].buffer,
     };
   } else {
-    const profile = await Profile.findOne({ name: session.user.name }) as IProfile;
+    const user = await conn.query("SELECT * FROM users WHERE username = ?", [session.user.name]);
 
     return {
-      id: file.id,
-      date: file.date,
-      ext: mime.getExtension(file.mimetype),
-      nsfw: file.nsfw,
+      id: file[0].id,
+      date: file[0].date,
+      ext: mime.getExtension(file[0].mimetype),
+      nsfw: file[0].nsfw ? true : false,
       uploader: {
-        clearanceLevel: profile.clearanceLevel,
-        name: uploader.name,
+        clearanceLevel: JSON.parse(user[0].clearanceLevels),
+        name: uploader[0].username,
       },
-      url: file.buffer,
+      url: file[0].buffer,
     };
   }
 

@@ -1,46 +1,52 @@
-import { IProfile, Profile } from "../../database/models/profile.model";
+import getConnection from "~~/server/database";
 import { getServerSession } from "#auth";
 import { generateString } from "~~/utils/generateString";
 
 export default defineEventHandler(async (event) => {
-  const session = await getServerSession(event) as any;
+  const session = (await getServerSession(event)) as any;
   const body = await readBody(event);
-  const profile = await Profile.findOne({ name: session.user.name }) as IProfile;
-  const newProfile = await Profile.findOne({ name: body.name });
+  const conn = await getConnection();
+  const user = await conn.query("SELECT * FROM users WHERE username = ?", [
+    session.user.name,
+  ]);
+  const newUser = await conn.query("SELECT * FROM users WHERE username = ?", [
+    body.username,
+  ]);
 
   if (!session) {
     return {
       code: 403,
       message: "Not Allowed",
-    }
+    };
   }
 
-  if (!profile.clearanceLevel.includes("Moderator")) {
+  if (!user[0].clearanceLevel.includes("Moderator")) {
     return {
       code: 403,
-      message: "Not Allowed"
-    }
+      message: "Not Allowed",
+    };
   }
 
-  if (newProfile) {
+  if (newUser[0]) {
     return {
       code: 400,
-      message: "This account has existed"
-    }
+      message: "This account has existed",
+    };
   }
 
   const authKey = generateString(32);
 
-  Profile.create({
-    clearanceLevel: ["Member"],
-    displayName: body.name,
-    kudos: 0,
-    authKey,
-    createdAt: new Date(),
-    email: "",
-    files: [],
-    posts: [],
-    name: body.name,
-    password: body.password,
-  });
+  await conn.execute(
+    "INSERT INTO users (clearanceLevels, displayName, kudos, authKey, createdAt, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      ["Member"],
+      body.username,
+      0,
+      authKey,
+      new Date(),
+      body.email,
+      body.username,
+      body.password,
+    ]
+  );
 });

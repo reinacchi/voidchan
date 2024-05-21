@@ -1,10 +1,10 @@
 import { getServerSession } from "#auth";
-import { Posts, IPosts } from "~~/server/database/models/posts.model";
-import { Profile } from "~~/server/database/models/profile.model";
+import getConnection from "~~/server/database";
 import { generateString } from "~~/utils/generateString";
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event);
+  const conn = await getConnection();
 
   if (!session) {
     return {
@@ -13,29 +13,26 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  const post = await Posts.find({});
   const body = await readBody(event);
-  const filename = generateString(36);
 
-  await Posts.create({
-    buffer: body.fileBuffer,
-    comments: [],
-    date: new Date(),
-    favourites: 0,
-    filename,
-    id: post.length ? post.length++ : 0,
-    mimetype: body.fileType,
-    rating: body.fileRating,
-    size: body.fileSize,
-    source: {
-      characters: body.fileCharacters ?? [],
-      copyright: body.fileCopyright ?? "",
-      source: body.fileSource ?? "",
-    },
-    status: "pending",
-    tags: body.fileTags ?? [],
-    uploader: session.user?.name,
-  } as IPosts);
-
-  await Profile.findOneAndUpdate({ name: session.user?.name }, { $push: { posts: post.length ? post.length - 1 : 0 } });
+  await conn.execute(
+    "INSERT INTO posts (buffer, comments, date, favourites, mimetype, rating, size, source, status, tags, uploader) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      body.fileBuffer,
+      [],
+      new Date,
+      0,
+      body.fileType,
+      body.fileRating,
+      body.fileSize,
+      {
+        characters: body.fileCharacters ?? [],
+        copyright: body.fileCopyright ?? "",
+        source: body.fileSource ?? "",
+      },
+      "pending",
+      body.fileTags ?? [],
+      session.user?.name,
+    ]
+  );
 });

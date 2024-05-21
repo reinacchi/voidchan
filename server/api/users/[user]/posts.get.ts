@@ -1,13 +1,12 @@
-import { IPosts, Posts } from "~~/server/database/models/posts.model";
-import { IProfile, Profile } from "~~/server/database/models/profile.model";
+import getConnection from "~~/server/database";
 import mime from "mime";
 
 export default defineEventHandler(async (event) => {
-  const user = getRouterParam(event, "user") as string;
-  const profile = await Profile.findOne({ name: user }) as IProfile;
-  const posts = await Posts.find({ id: profile.posts }) as IPosts[];
+  const userParam = getRouterParam(event, "user") as string;
+  const conn = await getConnection();
+  const posts = await conn.query("SELECT * FROM posts WHERE uploader = ?", [userParam]);
 
-  return posts.map((post) => {
+  return posts.map((post: any) => {
     return {
       id: post.id,
       date: post.date,
