@@ -13,13 +13,13 @@
       <li><h2 class="text-xl font-bold text-left">Profile</h2></li>
       <div v-if="status === 'authenticated'">
         <li class="text-base text-violet-500 text-left"><nuxt-link :to="'/users/' + session?.user.name">Profile</nuxt-link></li>
-        <li class="text-base text-violet-500 text-left"><nuxt-link to="/users/settings">Settings</nuxt-link></li>
+        <li class="text-base text-violet-500 text-left"><nuxt-link to="/settings">Settings</nuxt-link></li>
         <li class="text-base text-violet-500 text-left"><nuxt-link :to="'/users/' + session?.user.name + '/uploads'">Uploads</nuxt-link></li>
         <li class="text-base text-violet-500 text-left"><nuxt-link :to="'/users/' + session?.user.name + '/shares'">Shares</nuxt-link></li>
         <li class="text-left"><button class="text-base text-violet-500 hover:underline cursor-pointer" @click="signOut({ callbackUrl: '/' })">Logout</button></li>
       </div>
       <div v-else>
-        <li class="text-left"><button class="text-base text-violet-500 hover:underline cursor-pointer" @click="signIn('')">Login</button></li>
+        <li class="text-left"><button class="text-base text-violet-500 hover:underline cursor-pointer"><nuxt-link to="/login">Login</nuxt-link></button></li>
       </div>
     </ul>
   </section>
@@ -48,13 +48,13 @@
       <li><h2 class="text-xl font-bold text-left">Profile</h2></li>
       <div v-if="status === 'authenticated'">
         <li class="text-base text-violet-500 text-left"><nuxt-link :to="'/users/' + session?.user.name">Profile</nuxt-link></li>
-        <li class="text-base text-violet-500 text-left"><nuxt-link to="/users/settings">Settings</nuxt-link></li>
+        <li class="text-base text-violet-500 text-left"><nuxt-link to="/settings">Settings</nuxt-link></li>
         <li class="text-base text-violet-500 text-left"><nuxt-link :to="'/users/' + session?.user.name + '/uploads'">Uploads</nuxt-link></li>
         <li class="text-base text-violet-500 text-left"><nuxt-link :to="'/users/' + session?.user.name + '/shares'">Shares</nuxt-link></li>
         <li class="text-left"><button class="text-base text-violet-500 hover:underline cursor-pointer" @click="signOut({ callbackUrl: '/' })">Logout</button></li>
       </div>
       <div v-else>
-        <li class="text-left"><button class="text-base text-violet-500 hover:underline cursor-pointer" @click="signIn('')">Login</button></li>
+        <li class="text-left"><button class="text-base text-violet-500 hover:underline cursor-pointer"><nuxt-link to="/login">Login</nuxt-link></button></li>
       </div>
     </ul>
     </section>

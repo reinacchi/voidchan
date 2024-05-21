@@ -21,7 +21,7 @@
         </div>
         <div class="flex items-center space-x-4">
           <div class="hidden md:flex">
-            <button v-if="status === 'unauthenticated'" @click="signIn('')" class="text-gray-300 font-sans hover:text-white px-3 py-2 rounded-md text-base font-medium">Login</button>
+            <button v-if="status === 'unauthenticated'" @click="toLogin" class="text-gray-300 font-sans hover:text-white px-3 py-2 rounded-md text-base font-medium">Login</button>
             <button v-else @click="signOut({ callbackUrl: '/' })" class="text-gray-300 font-sans hover:text-white px-3 py-2 rounded-md text-base font-medium">Logout</button>
           </div>
           <div class="md:hidden">
@@ -43,7 +43,7 @@
         <nuxt-link v-if="status === 'authenticated'" @click="toUpload" class="text-gray-300 font-sans hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-square-plus mr-1"></i> Upload New</nuxt-link>
         <nuxt-link @click="toMore" class="text-gray-300 font-sans hover:cursor-pointer hover:text-white block hover:no-underline px-3 py-2 rounded-md text-base font-medium">More »</nuxt-link>
         <hr class="border-violet-500 border-opacity-20">
-        <span v-if="status === 'unauthenticated'" @click="signIn('')" class="text-gray-300 font-sans hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</span>
+        <span v-if="status === 'unauthenticated'" @click="toLogin" class="text-gray-300 font-sans hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</span>
         <span v-else @click="signOut({ callbackUrl: '/' })" class="text-gray-300 font-sans hover:text-white block px-3 cursor-pointer py-2 rounded-md text-base font-medium">Logout</span>
       </div>
     </div>
@@ -75,6 +75,10 @@ function toUpload() {
 }
 function toMore() {
   useRouter().push("/sitemap");
+  isOpen.value = false;
+}
+function toLogin() {
+  useRouter().push("/login");
   isOpen.value = false;
 }
 </script>

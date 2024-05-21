@@ -8,22 +8,13 @@ const config = useRuntimeConfig();
 
 export default NuxtAuthHandler({
   secret: config.PrivateAuth,
+  pages: {
+    signIn: "/login",
+  },
   providers: [
     /* @ts-ignore */
     CredentialsProvider.default({
       name: "Credentials",
-      credentials: {
-        username: {
-          label: "Username",
-          type: "text",
-          placeholder: "Your Username",
-        },
-        password: {
-          label: "Password",
-          type: "password",
-          placeholder: "Your Password",
-        },
-      },
       async authorize(credentials: any, req: any) {
         const userToCheck = (await Profile.findOne({
           name: credentials.username,

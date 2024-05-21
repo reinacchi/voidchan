@@ -154,7 +154,7 @@
             <td class="text-lg">
               {{ user.name }}
               <span v-if="session?.user.name === user.name">
-                (<nuxt-link to="/users/settings" class="text-violet-500"
+                (<nuxt-link to="/settings" class="text-violet-500"
                   >edit</nuxt-link
                 >)
               </span>
@@ -359,7 +359,7 @@
             <td class="text-sm">
               {{ user.name }}
               <span v-if="session?.user.name === user.name">
-                (<nuxt-link to="/users/settings" class="text-violet-500"
+                (<nuxt-link to="/settings" class="text-violet-500"
                   >edit</nuxt-link
                 >)
               </span>
