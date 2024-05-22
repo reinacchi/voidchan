@@ -4,7 +4,6 @@ import mime from "mime";
 export default defineEventHandler(async (event) => {
   const userParam = getRouterParam(event, "user") as string;
   const conn = await getConnection();
-  const user = await conn.query("SELECT * FROM users WHERE username = ?", [userParam]);
   const files = await conn.query("SELECT * FROM files WHERE uploader = ?", [userParam]);
 
   return files.map((file: any) => {
@@ -18,5 +17,5 @@ export default defineEventHandler(async (event) => {
       },
       url: file.buffer,
     }
-  });
+  }).reverse();
 });
