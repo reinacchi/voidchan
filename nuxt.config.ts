@@ -32,7 +32,7 @@ export default defineNuxtConfig({
     "@/assets/css/style.css",
   ],
   nitro: {
-    plugins:["~/server/database/index.ts", "~/server/discord/index.ts"],
+    plugins: ["~/server/database/index.ts", "~/server/discord/index.ts"],
   },
   runtimeConfig: {
     BaseURL: process.env.BASE_URL,

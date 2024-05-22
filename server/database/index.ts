@@ -24,11 +24,12 @@ export interface IUser {
   username: string;
 }
 
+const config = useRuntimeConfig();
 const pool = createPool({
-  host: "localhost",
-  user: "root",
-  port: 3306,
-  database: "voidchan_db",
+  host: config.DBHost,
+  user: config.DBUser,
+  port: Number(config.DBPort),
+  database: config.DBName,
   connectionLimit: 5,
 });
 
