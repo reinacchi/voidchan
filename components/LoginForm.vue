@@ -9,6 +9,7 @@
       >
       <input
         v-model="username"
+        autocomplete="off"
         type="username"
         name="username"
         id="username"

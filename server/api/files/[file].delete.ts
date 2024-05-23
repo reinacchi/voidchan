@@ -1,10 +1,10 @@
-import { Files } from "../../database/models/files.model";
-import { IProfile, Profile } from "~~/server/database/models/profile.model";
+import getConnection from "~~/server/database";
 import { getServerSession } from "#auth";
 
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event) as any;
   const fileID = getRouterParam(event, "file") as string;
+  const conn = await getConnection();
 
   if (!session) {
     return {
@@ -13,11 +13,10 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const profile = await Profile.findOne({ name: session?.user?.name }) as IProfile;
-  const file = await Files.findOne({ id: fileID });
+  const user = await conn.query("SELECT * FROM users WHERE username = ?", [session.user.name]);
+  const file = await conn.query("SELECT * FROM files WHERE id = ?", [fileID]);
 
-  if (profile.name === file?.uploader) {
-    await Profile.findOneAndUpdate({ name: file.uploader }, { $pull: { files: fileID } });
-    await Files.findOneAndDelete({ id: fileID });
+  if (user[0].username === file[0].uploader) {
+    await conn.execute("DELETE FROM files WHERE id = ?", [fileID]);
   }
 });

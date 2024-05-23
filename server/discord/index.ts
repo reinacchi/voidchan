@@ -1,5 +1,5 @@
 import { Client, CommandInteraction, Constants, TextChannel } from "oceanic.js";
-import { Files } from "../database/models/files.model";
+import getConnection from "../database";
 
 const config = useRuntimeConfig();
 
@@ -12,10 +12,11 @@ export default defineEventHandler(async () => {
         maxShards: "auto"
       }
     });
+    const conn = await getConnection();
 
     client.on("ready", () => {
       setInterval(async () => {
-        const files = await Files.find({});
+        const files = await conn.query("SELECT * FROM files");
         client.editStatus("dnd", [
           {
             name: files.length <= 1 ? `${files.length} file` : `${files.length} files`,

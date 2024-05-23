@@ -1,4 +1,4 @@
-import { Posts, IPosts } from "~~/server/database/models/posts.model";
+import getConnection from "~~/server/database";
 
 export default defineEventHandler(async (event) => {
 

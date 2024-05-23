@@ -1,31 +1,68 @@
-import { IProfile, Profile } from "~~/server/database/models/profile.model";
+import getConnection, { IUser } from "~~/server/database";
 
 const config = useRuntimeConfig();
 
 export default defineEventHandler(async (event) => {
-  const users = (await Profile.find({})) as IProfile[];
+  const conn = await getConnection();
+  const users = (await conn.query("SELECT * FROM users")) as IUser[];
 
   if (event.node.req.headers.authorization === config.PrivateAuth) {
-    return users.map((user) => {
+    const promises = users.map(async (user) => {
+      const userFiles = await conn.query(
+        "SELECT * FROM files WHERE uploader = ?",
+        [user.username]
+      );
+
+      const userPosts = await conn.query(
+        "SELECT * FROM posts WHERE uploader = ?",
+        [user.username]
+      );
+
       return {
-        clearanceLevel: user.clearanceLevel,
+        id: user.id,
+        clearanceLevels: JSON.parse(user.clearanceLevels) as string[],
+        createdAt: user.createdAt,
         auth: user.authKey,
-        createdAt: user.createdAt,
-        displayName: user.displayName,
         email: user.email,
-        name: user.name,
-        posts: user.posts,
+        displayName: user.displayName,
+        username: user.username,
+        kudos: user.kudos,
+        files: userFiles.length as number,
+        posts: userPosts.length as number,
       };
     });
+
+    const data = await Promise.all(promises);
+
+    return data;
+
   } else {
-    return users.map((user) => {
+    const promises = users.map(async (user) => {
+      const userFiles = await conn.query(
+        "SELECT * FROM files WHERE uploader = ?",
+        [user.username]
+      );
+
+      const userPosts = await conn.query(
+        "SELECT * FROM posts WHERE uploader = ?",
+        [user.username]
+      );
+
       return {
-        clearanceLevel: user.clearanceLevel,
+        id: user.id,
+        clearanceLevels: JSON.parse(user.clearanceLevels) as string[],
         createdAt: user.createdAt,
         displayName: user.displayName,
-        name: user.name,
-        posts: user.posts
+        username: user.username,
+        kudos: user.kudos,
+        files: userFiles.length as number,
+        posts: userPosts.length as number,
       };
     });
+
+    const data = await Promise.all(promises);
+
+    return data;
+
   }
 });

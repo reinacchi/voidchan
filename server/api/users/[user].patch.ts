@@ -1,4 +1,4 @@
-import { Profile } from "../../database/models/profile.model";
+import getConnection from "~~/server/database";
 import { getServerSession } from "#auth";
 
 const config = useRuntimeConfig();
@@ -6,6 +6,7 @@ const config = useRuntimeConfig();
 export default defineEventHandler(async (event) => {
   const session = await getServerSession(event) as any;
   const name = getRouterParam(event, "user") as string;
+  const conn = await getConnection();
 
   if (!session) {
     return {
@@ -29,6 +30,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
+  const fields = Object.keys(body).map(key => `${key} = ?`).join(", ");
+  const values = Object.values(body);
+  values.push(name);
 
-  await Profile.findOneAndUpdate({ name }, { $set: body });
+  await conn.execute(`UPDATE users SET ${fields} WHERE username = ?`, values);
 });

@@ -1,20 +1,19 @@
-import { Files, IFiles } from "~~/server/database/models/files.model";
-import { IProfile, Profile } from "~~/server/database/models/profile.model";
+import getConnection from "~~/server/database";
 import mime from "mime";
 
 export default defineEventHandler(async (event) => {
-  const user = getRouterParam(event, "user") as string;
-  const profile = await Profile.findOne({ name: user }) as IProfile;
-  const files = await Files.find({ id: profile.files }) as IFiles[];
+  const userParam = getRouterParam(event, "user") as string;
+  const conn = await getConnection();
+  const files = await conn.query("SELECT * FROM files WHERE uploader = ?", [userParam]);
 
-  return files.map((file) => {
+  return files.map((file: any) => {
     return {
       id: file.id,
       date: file.date,
       ext: mime.getExtension(file.mimetype),
       nsfw: file.nsfw,
       uploader: {
-        name: profile.name,
+        name: file.uploader,
       },
       url: file.buffer,
     }

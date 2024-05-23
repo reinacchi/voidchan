@@ -1,12 +1,45 @@
-import mongoose from "mongoose";
+import { createPool, PoolConnection } from "mariadb";
+
+export type ClearanceLevels =
+  | "Project Lead"
+  | "Developer"
+  | "Moderator"
+  | "Nominator"
+  | "Contributor"
+  | "Verified"
+  | "Plus"
+  | "Alumni"
+  | "Supporter"
+  | "Member";
+
+export interface IUser {
+  authKey: string;
+  clearanceLevels: string;
+  createdAt: Date;
+  displayName: string;
+  id: number;
+  kudos: number;
+  email: string;
+  password: string;
+  username: string;
+}
 
 const config = useRuntimeConfig();
+const pool = createPool({
+  host: config.DBHost,
+  user: config.DBUser,
+  port: Number(config.DBPort),
+  database: config.DBName,
+  connectionLimit: 5,
+});
 
-export default async () => {
-  mongoose.set("strictQuery", false);
+export default async function getConnection() {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+  } finally {
+    if (conn) conn.release();
+  }
 
-  await mongoose
-  .connect(config.MongoDB)
-  .then(() => console.info("Connected to MongoDB"))
-  .catch((err) => console.error("Failed to connect to MongoDB", err));
+  return conn as PoolConnection;
 }
