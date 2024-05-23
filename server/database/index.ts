@@ -31,7 +31,10 @@ const pool = createPool({
   password: config.DBPassword,
   port: Number(config.DBPort),
   database: config.DBName,
-  connectionLimit: 5,
+  connectionLimit: 10,
+  timeout: 120000,
+  connectTimeout: 120000,
+  acquireTimeout: 120000,
 });
 
 export default async function getConnection() {
