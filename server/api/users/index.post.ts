@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  if (!user[0].clearanceLevel.includes("Moderator")) {
+  if (!user[0].clearanceLevels.includes("Moderator")) {
     return {
       code: 403,
       message: "Not Allowed",
