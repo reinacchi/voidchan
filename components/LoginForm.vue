@@ -37,7 +37,10 @@
         >Forgot password?</nuxt-link
       >
     </div>
-    <button type="submit" class="btn glass text-white w-full">Login</button>
+    <button @click="handleLogin" type="submit" class="btn glass text-white w-full relative flex items-center justify-center">
+      <span v-if="!loading">Login</span>
+      <div v-if="loading" class="loader"></div>
+    </button>
     <p class="text-sm font-light text-primary-600">
       New to VoidChan?
       <nuxt-link
@@ -55,6 +58,7 @@ import { toast } from "vue-sonner";
 const { signIn } = useAuth();
 const username = ref("");
 const password = ref("");
+const loading = ref(false);
 
 function getQueryParam(paramName: string) {
   const currentUrl = window.location.href;
@@ -79,6 +83,8 @@ const handleSignIn = async ({
   username: string;
   password: string;
 }) => {
+  loading.value = true;
+
   const currentURL = getQueryParam("callbackUrl") as string;
   const path = extractPathFromURL(currentURL);
   /* @ts-ignore */
@@ -89,10 +95,17 @@ const handleSignIn = async ({
     redirect: false,
   });
 
-  if (!username) return toast.error("Invalid username!");
-  if (!password) return toast.error("Invalid password!");
+  if (!username) {
+    loading.value = false;
+    return toast.error("Invalid username!")
+  };
+  if (!password) {
+    loading.value = false;
+    return toast.error("Invalid password!");
+  }
 
   if (error) {
+    loading.value = false;
     toast.error("Username or password is wrong!");
   } else {
     return navigateTo(url, { external: true });
@@ -184,5 +197,23 @@ const handleSignIn = async ({
     var(--bc) / var(--tw-text-opacity-hover)
   ); /* Keep the text color same or adjust if needed */
   text-shadow: 0 1px rgba(0, 0, 0, 0.1); /* Adjust text shadow if necessary */
+}
+
+.btn:active {
+  transform: translateY(5px) scale(0.98);
+}
+
+.loader {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
