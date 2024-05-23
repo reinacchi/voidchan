@@ -1,4 +1,5 @@
 import getConnection, { IUser } from "~~/server/database";
+import { parseJSON } from "~~/utils/parseJSON";
 
 const config = useRuntimeConfig();
 
@@ -20,7 +21,7 @@ export default defineEventHandler(async (event) => {
 
       return {
         id: user.id,
-        clearanceLevels: user.clearanceLevels,
+        clearanceLevels: parseJSON(user.clearanceLevels),
         createdAt: user.createdAt,
         auth: user.authKey,
         email: user.email,
@@ -50,7 +51,7 @@ export default defineEventHandler(async (event) => {
 
       return {
         id: user.id,
-        clearanceLevels: user.clearanceLevels,
+        clearanceLevels: parseJSON(user.clearanceLevels),
         createdAt: user.createdAt,
         displayName: user.displayName,
         username: user.username,

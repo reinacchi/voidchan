@@ -1,6 +1,7 @@
 import getConnection from "~~/server/database";
 import mime from "mime";
 import { getServerSession } from "#auth";
+import { parseJSON } from "~~/utils/parseJSON";
 
 export default defineEventHandler(async (event) => {
   const fileID = getRouterParam(event, "file") as string;
@@ -36,7 +37,7 @@ export default defineEventHandler(async (event) => {
       ext: mime.getExtension(file[0].mimetype),
       nsfw: file[0].nsfw ? true : false,
       uploader: {
-        clearanceLevels: user[0].clearanceLevels,
+        clearanceLevels: parseJSON(user[0].clearanceLevels),
         name: uploader[0].username,
       },
       url: file[0].buffer,
