@@ -3,7 +3,6 @@
     v-if="!failed"
     ref="element"
     :src="src"
-    :class="{ 'animate-pulse bg-black/30': loading }"
   />
 </template>
 <script setup lang="ts">
