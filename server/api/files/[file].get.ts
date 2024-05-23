@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
       ext: mime.getExtension(file[0].mimetype),
       nsfw: file[0].nsfw ? true : false,
       uploader: {
-        clearanceLevel: JSON.parse(user[0].clearanceLevels),
+        clearanceLevels: user[0].clearanceLevels,
         name: uploader[0].username,
       },
       url: file[0].buffer,

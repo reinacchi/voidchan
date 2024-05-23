@@ -28,6 +28,7 @@ const config = useRuntimeConfig();
 const pool = createPool({
   host: config.DBHost,
   user: config.DBUser,
+  password: config.DBPassword,
   port: Number(config.DBPort),
   database: config.DBName,
   connectionLimit: 5,

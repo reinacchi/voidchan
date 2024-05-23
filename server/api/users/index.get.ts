@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 
       return {
         id: user.id,
-        clearanceLevels: JSON.parse(user.clearanceLevels) as string[],
+        clearanceLevels: user.clearanceLevels,
         createdAt: user.createdAt,
         auth: user.authKey,
         email: user.email,
@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
 
       return {
         id: user.id,
-        clearanceLevels: JSON.parse(user.clearanceLevels) as string[],
+        clearanceLevels: user.clearanceLevels,
         createdAt: user.createdAt,
         displayName: user.displayName,
         username: user.username,
