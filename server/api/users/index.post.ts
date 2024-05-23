@@ -1,6 +1,7 @@
 import getConnection from "~~/server/database";
 import { getServerSession } from "#auth";
 import { generateString } from "~~/utils/generateString";
+import bcrypt from "bcryptjs";
 
 export default defineEventHandler(async (event) => {
   const session = (await getServerSession(event)) as any;
@@ -35,6 +36,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const authKey = generateString(32);
+  const password = bcrypt.hashSync(body.password);
 
   await conn.execute(
     "INSERT INTO users (clearanceLevels, displayName, kudos, authKey, createdAt, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -46,7 +48,7 @@ export default defineEventHandler(async (event) => {
       new Date(),
       body.email,
       body.username,
-      body.password,
+      password,
     ]
   );
 });
