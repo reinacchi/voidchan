@@ -50,7 +50,7 @@ function resetKey() {
       authorization: config.PrivateAuth,
     },
     body: JSON.stringify({
-      authKey: newKey.value,
+      auth_key: newKey.value,
     }),
   });
 

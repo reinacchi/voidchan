@@ -1,16 +1,16 @@
 CREATE TABLE files (
     id VARCHAR(5) NOT NULL,
-    date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     buffer LONGTEXT NOT NULL,
     mimetype VARCHAR(255) NOT NULL,
     nsfw BOOLEAN NOT NULL DEFAULT FALSE,
     uploader VARCHAR(255) NOT NULL,
-    PRIMARY KEY (date)
+    PRIMARY KEY (created_at)
 );
 
 CREATE TABLE posts (
     id INT AUTO_INCREMENT,
-    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     buffer LONGTEXT NOT NULL,
     mimetype VARCHAR(255) NOT NULL,
     uploader VARCHAR(255) NOT NULL,
@@ -18,7 +18,6 @@ CREATE TABLE posts (
     tags JSON,
     comments JSON,
     favourites INT DEFAULT 0,
-    source JSON,
     size INT NOT NULL,
     rating ENUM("explicit", "erotica", "suggestive", "safe") NOT NULL,
     PRIMARY KEY (id)
@@ -34,11 +33,11 @@ CREATE TABLE tags (
         "copyright",
         "artist"
     ) NOT NULL,
-    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updatedAt DATETIME NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL,
     description TEXT,
     aliases JSON,
-    creatorID VARCHAR(255) NOT NULL
+    creator_id VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE users (
@@ -46,11 +45,11 @@ CREATE TABLE users (
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    authKey VARCHAR(255) NOT NULL,
-    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    displayName VARCHAR(255),
+    auth_key VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    display_name VARCHAR(255),
     kudos INT DEFAULT 0,
-    clearanceLevels JSON,
+    clearance_levels JSON,
     INDEX (username),
     INDEX (email)
 );

@@ -17,8 +17,8 @@
           <tr v-for="user in currentPageUsers" :key="user.username">
             <td class="text-left border-t border-violet-900 px-4 py-2">{{ user.id }}</td>
             <td class="text-left border-t border-violet-900 px-4 py-2"><nuxt-link class="text-violet-500" :to="'/users/' + user.username">{{ user.username }}</nuxt-link></td>
-            <td class="text-left border-t border-violet-900 px-4 py-2">{{ user.clearanceLevels[0] }}</td>
-            <td class="text-left border-t border-violet-900 px-4 py-2">{{ moment(user.createdAt).format("DD-MM-YYYY HH:MM") }}</td>
+            <td class="text-left border-t border-violet-900 px-4 py-2">{{ user.clearance_levels[0] }}</td>
+            <td class="text-left border-t border-violet-900 px-4 py-2">{{ moment(user.created_at).format("DD-MM-YYYY HH:MM") }}</td>
           </tr>
         </tbody>
       </table>

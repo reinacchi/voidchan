@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   return files.map((file: any) => {
     return {
       id: file.id,
-      date: file.date,
+      created_at: file.created_at,
       ext: mime.getExtension(file.mimetype),
       nsfw: file.nsfw,
       uploader: {

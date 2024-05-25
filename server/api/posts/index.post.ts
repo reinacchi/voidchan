@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
 
   await conn.execute(
-    "INSERT INTO posts (buffer, comments, date, favourites, mimetype, rating, size, source, status, tags, uploader) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO posts (buffer, comments, created_at, favourites, mimetype, rating, size, status, tags, uploader) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
       body.fileBuffer,
       [],
@@ -25,11 +25,6 @@ export default defineEventHandler(async (event) => {
       body.fileType,
       body.fileRating,
       body.fileSize,
-      {
-        characters: body.fileCharacters ?? [],
-        copyright: body.fileCopyright ?? "",
-        source: body.fileSource ?? "",
-      },
       "pending",
       body.fileTags ?? [],
       session.user?.name,

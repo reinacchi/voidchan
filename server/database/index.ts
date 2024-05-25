@@ -1,6 +1,6 @@
 import { createPool, PoolConnection } from "mariadb";
 
-export type ClearanceLevels =
+export type clearance_levels =
   | "Project Lead"
   | "Developer"
   | "Moderator"
@@ -13,10 +13,10 @@ export type ClearanceLevels =
   | "Member";
 
 export interface IUser {
-  authKey: string;
-  clearanceLevels: string;
-  createdAt: Date;
-  displayName: string;
+  auth_key: string;
+  clearance_levels: string;
+  created_at: Date;
+  display_name: string;
   id: number;
   kudos: number;
   email: string;

@@ -21,11 +21,11 @@ export default defineEventHandler(async (event) => {
 
       return {
         id: user.id,
-        clearanceLevels: parseJSON(user.clearanceLevels),
-        createdAt: user.createdAt,
-        auth: user.authKey,
+        clearance_levels: parseJSON(user.clearance_levels),
+        created_at: user.created_at,
+        auth: user.auth_key,
         email: user.email,
-        displayName: user.displayName,
+        display_name: user.display_name,
         username: user.username,
         kudos: user.kudos,
         files: userFiles.length as number,
@@ -51,9 +51,9 @@ export default defineEventHandler(async (event) => {
 
       return {
         id: user.id,
-        clearanceLevels: parseJSON(user.clearanceLevels),
-        createdAt: user.createdAt,
-        displayName: user.displayName,
+        clearance_levels: parseJSON(user.clearance_levels),
+        created_at: user.created_at,
+        display_name: user.display_name,
         username: user.username,
         kudos: user.kudos,
         files: userFiles.length as number,

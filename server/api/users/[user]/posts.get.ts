@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   return posts.map((post: any) => {
     return {
       id: post.id,
-      date: post.date,
+      created_at: post.created_at,
       ext: mime.getExtension(post.mimetype),
       uploader: post.uploader,
       tags: post.tags,

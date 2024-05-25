@@ -195,14 +195,6 @@
             class="shadow bg-violet-900 bg-opacity-10 border-violet-900 appearance-none border border-solid w-full h-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
           ></textarea>
           <br /><br />
-          <label class="text-xl mr-[15rem] font-semibold">Character(s)</label>
-          <br />
-          <input
-            class="shadow bg-violet-900 bg-opacity-10 border-violet-900 appearance-none border border-solid w-full h-6 py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
-            v-model="fileCharacters"
-            type="text"
-          />
-          <br /><br />
           <label class="text-xl mr-[18rem] font-semibold">Source</label>
           <br />
           <input
@@ -338,15 +330,6 @@
       ></textarea>
       <br /><br />
       <div class="flex ml-12 items-center">
-        <label class="text-xl font-semibold">Character(s)</label>
-      </div>
-      <input
-        class="shadow bg-violet-900 bg-opacity-10 border-violet-900 flex ml-12 appearance-none border border-solid w-4/5 h-8 py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
-        v-model="fileCharacters"
-        type="text"
-      />
-      <br /><br />
-      <div class="flex ml-12 items-center">
         <label class="text-xl font-semibold">Source</label>
       </div>
       <input
@@ -410,7 +393,6 @@ async function handleFileSubmit() {
       fileRating: fileRating.value,
       fileSize: file.value[0].size,
       fileType: file.value[0].type,
-      fileCharacters: fileCharacters.value.trim().split(/\s+/),
       fileSource: fileSource.value,
       fileTags: fileTags.value.trim().split(/\s+/),
     },

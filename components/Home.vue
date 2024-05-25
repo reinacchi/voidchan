@@ -6,7 +6,7 @@
     <div>
       <div v-if="status === 'authenticated'">
         <p>
-          Hello, <b>{{ user.displayName }}</b>.
+          Hello, <b>{{ user.display_name }}</b>.
         </p>
       </div>
     </div>

@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  if (!user[0].clearanceLevels.includes("Moderator")) {
+  if (!user[0].clearance_levels.includes("Moderator")) {
     return {
       code: 403,
       message: "Not Allowed",
@@ -34,16 +34,16 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  const authKey = generateString(32);
+  const auth_key = generateString(32);
   const password = generatePassword(body.password);
 
   await conn.execute(
-    "INSERT INTO users (clearanceLevels, displayName, kudos, authKey, createdAt, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO users (clearance_levels, display_name, kudos, auth_key, created_at, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     [
       ["Member"],
       body.username,
       0,
-      authKey,
+      auth_key,
       new Date(),
       body.email,
       body.username,

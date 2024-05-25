@@ -8,7 +8,7 @@ const config = useRuntimeConfig();
 export default defineEventHandler(async (event) => {
   const auth = getHeader(event, "Authorisation");
   const conn = await getConnection();
-  const user = await conn.query(`SELECT * FROM users WHERE authKey = ?`, [auth]);
+  const user = await conn.query(`SELECT * FROM users WHERE auth_key = ?`, [auth]);
   const { files } = await useFiles(event);
 
   if (!user[0]) {
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   const mimeType = mime.getExtension(files[0].mimetype);
 
   await conn.execute(
-    "INSERT INTO files (id, date, buffer, mimetype, nsfw, uploader) VALUES (?, ?, ?, ?, ?, ?)",
+    "INSERT INTO files (id, created_at, buffer, mimetype, nsfw, uploader) VALUES (?, ?, ?, ?, ?, ?)",
     [
       name,
       new Date(),

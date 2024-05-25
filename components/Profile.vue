@@ -14,7 +14,7 @@
           'text-gray-500': user.clearanceLevel[0] === 'Alumni',
         }"
         class="font-sans"
-        >{{ user.displayName }}</span
+        >{{ user.display_name }}</span
       >
       <div
         v-if="user.clearanceLevel.includes('Project Lead')"
@@ -167,7 +167,7 @@
           <tr>
             <th class="text-gray-300 text-lg font-semibold">Joined At:</th>
             <td class="text-lg">
-              {{ moment(user.createdAt).format("DD-MM-YYYY") }}
+              {{ moment(user.created_at).format("DD-MM-YYYY") }}
             </td>
           </tr>
           <tr>
@@ -219,7 +219,7 @@
           'text-gray-500': user.clearanceLevel[0] === 'Alumni',
         }"
         class="font-sans"
-        >{{ user.displayName }}</span
+        >{{ user.display_name }}</span
       >
       <div
         v-if="user.clearanceLevel.includes('Project Lead')"
@@ -372,7 +372,7 @@
           <tr>
             <th class="text-gray-300 text-sm font-semibold">Joined At:</th>
             <td class="text-smL">
-              {{ moment(user.createdAt).format("DD-MM-YYYY") }}
+              {{ moment(user.created_at).format("DD-MM-YYYY") }}
             </td>
           </tr>
           <tr>

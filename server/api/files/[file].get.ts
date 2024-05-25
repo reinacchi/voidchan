@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
   if (!session) {
     return {
       id: file[0].id,
-      date: file[0].date,
+      created_at: file[0].created_at,
       ext: mime.getExtension(file[0].mimetype),
       nsfw: file[0].nsfw ? true : false,
       uploader: {
@@ -33,11 +33,11 @@ export default defineEventHandler(async (event) => {
 
     return {
       id: file[0].id,
-      date: file[0].date,
+      created_at: file[0].created_at,
       ext: mime.getExtension(file[0].mimetype),
       nsfw: file[0].nsfw ? true : false,
       uploader: {
-        clearanceLevels: parseJSON(user[0].clearanceLevels),
+        clearance_levels: parseJSON(user[0].clearance_levels),
         name: uploader[0].username,
       },
       url: file[0].buffer,
