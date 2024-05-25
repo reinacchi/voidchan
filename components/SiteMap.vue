@@ -81,9 +81,9 @@ import { checkPermission } from '~~/utils/checkPermission';
 
 const { data: session, signIn, signOut, status } = useAuth() as any;
 const { data: user } = status.value === "authenticated" ? await useFetch(`/api/users/${session.value?.user?.name}`): {} as any;
-const devOnly = status.value === "authenticated" ? await checkPermission(user.value.clearanceLevel, ["Project Lead", "Developer"]) : false;
-const modOnly = status.value === "authenticated" ? await checkPermission(user.value.clearanceLevel, ["Project Lead", "Developer", "Moderator"]) : false;
-const staffOnly = status.value === "authenticated" ? await checkPermission(user.value.clearanceLevel, ["Project Lead", "Developer", "Moderator", "Nominator"]) : false;
+const devOnly = status.value === "authenticated" ? await checkPermission(user.value.clearance_levels, ["Project Lead", "Developer"]) : false;
+const modOnly = status.value === "authenticated" ? await checkPermission(user.value.clearance_levels, ["Project Lead", "Developer", "Moderator"]) : false;
+const staffOnly = status.value === "authenticated" ? await checkPermission(user.value.clearance_levels, ["Project Lead", "Developer", "Moderator", "Nominator"]) : false;
 
 useHead({
   title: "Site Map | VoidChan"

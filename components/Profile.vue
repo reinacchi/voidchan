@@ -3,21 +3,21 @@
     <h1 class="text-4xl font-bold mt-12 flex items-center ml-10">
       <span
         :class="{
-          'text-accent': user.clearanceLevel[0] === 'Project Lead',
-          'text-teal-500': user.clearanceLevel[0] === 'Developer',
-          'text-red-500': user.clearanceLevel[0] === 'Moderator',
-          'text-orange-500': user.clearanceLevel[0] === 'Nominator',
-          'text-green-500': user.clearanceLevel[0] === 'Contributor',
-          'text-blue-500': user.clearanceLevel[0] === 'Verified',
-          'text-yellow-500': user.clearanceLevel[0] === 'Plus',
-          'text-pink-500': user.clearanceLevel[0] === 'Supporter',
-          'text-gray-500': user.clearanceLevel[0] === 'Alumni',
+          'text-accent': user.clearance_levels[0] === 'Project Lead',
+          'text-teal-500': user.clearance_levels[0] === 'Developer',
+          'text-red-500': user.clearance_levels[0] === 'Moderator',
+          'text-orange-500': user.clearance_levels[0] === 'Nominator',
+          'text-green-500': user.clearance_levels[0] === 'Contributor',
+          'text-blue-500': user.clearance_levels[0] === 'Verified',
+          'text-yellow-500': user.clearance_levels[0] === 'Plus',
+          'text-pink-500': user.clearance_levels[0] === 'Supporter',
+          'text-gray-500': user.clearance_levels[0] === 'Alumni',
         }"
         class="font-sans"
         >{{ user.display_name }}</span
       >
       <div
-        v-if="user.clearanceLevel.includes('Project Lead')"
+        v-if="user.clearance_levels.includes('Project Lead')"
         class="relative group inline-block ml-2"
       >
         <i class="text-3xl fal fa-leaf-maple cursor-pointer text-accent"></i>
@@ -31,7 +31,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Developer')"
+        v-if="user.clearance_levels.includes('Developer')"
         class="relative group inline-block ml-2"
       >
         <i class="text-3xl fal fa-code cursor-pointer text-teal-500"></i>
@@ -45,7 +45,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Moderator')"
+        v-if="user.clearance_levels.includes('Moderator')"
         class="relative group inline-block ml-2"
       >
         <i class="text-3xl fal fa-shield cursor-pointer text-red-500"></i>
@@ -59,7 +59,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Nominator')"
+        v-if="user.clearance_levels.includes('Nominator')"
         class="relative group inline-block ml-2"
       >
         <i class="text-3xl fal fa-gavel cursor-pointer text-orange-500"></i>
@@ -73,7 +73,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Contributor')"
+        v-if="user.clearance_levels.includes('Contributor')"
         class="relative group inline-block ml-2"
       >
         <i
@@ -89,7 +89,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Verified')"
+        v-if="user.clearance_levels.includes('Verified')"
         class="relative group inline-block ml-2"
       >
         <i class="text-3xl fal fa-badge-check cursor-pointer text-blue-500"></i>
@@ -103,7 +103,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Plus')"
+        v-if="user.clearance_levels.includes('Plus')"
         class="relative group inline-block ml-2"
       >
         <i class="text-3xl fal fa-crown cursor-pointer text-yellow-500"></i>
@@ -117,7 +117,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Supporter')"
+        v-if="user.clearance_levels.includes('Supporter')"
         class="relative group inline-block ml-2"
       >
         <i class="text-3xl fal fa-heart cursor-pointer text-pink-500"></i>
@@ -131,7 +131,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Alumni')"
+        v-if="user.clearance_levels.includes('Alumni')"
         class="relative group inline-block ml-2"
       >
         <i class="text-3xl fal fa-dice cursor-pointer text-gray-500"></i>
@@ -174,7 +174,7 @@
             <th class="text-gray-300 text-lg font-semibold">
               Clearance Level:
             </th>
-            <td class="text-lg">{{ user.clearanceLevel[0] }}</td>
+            <td class="text-lg">{{ user.clearance_levels[0] }}</td>
           </tr>
           <tr>
             <th class="text-gray-300 text-lg font-semibold">Kudos:</th>
@@ -208,21 +208,21 @@
     <h1 class="text-3xl font-bold mt-12 block ml-6 text-left">
       <span
         :class="{
-          'text-accent': user.clearanceLevel[0] === 'Project Lead',
-          'text-teal-500': user.clearanceLevel[0] === 'Developer',
-          'text-red-500': user.clearanceLevel[0] === 'Moderator',
-          'text-orange-500': user.clearanceLevel[0] === 'Nominator',
-          'text-green-500': user.clearanceLevel[0] === 'Contributor',
-          'text-blue-500': user.clearanceLevel[0] === 'Verified',
-          'text-yellow-500': user.clearanceLevel[0] === 'Plus',
-          'text-pink-500': user.clearanceLevel[0] === 'Supporter',
-          'text-gray-500': user.clearanceLevel[0] === 'Alumni',
+          'text-accent': user.clearance_levels[0] === 'Project Lead',
+          'text-teal-500': user.clearance_levels[0] === 'Developer',
+          'text-red-500': user.clearance_levels[0] === 'Moderator',
+          'text-orange-500': user.clearance_levels[0] === 'Nominator',
+          'text-green-500': user.clearance_levels[0] === 'Contributor',
+          'text-blue-500': user.clearance_levels[0] === 'Verified',
+          'text-yellow-500': user.clearance_levels[0] === 'Plus',
+          'text-pink-500': user.clearance_levels[0] === 'Supporter',
+          'text-gray-500': user.clearance_levels[0] === 'Alumni',
         }"
         class="font-sans"
         >{{ user.display_name }}</span
       >
       <div
-        v-if="user.clearanceLevel.includes('Project Lead')"
+        v-if="user.clearance_levels.includes('Project Lead')"
         class="relative group inline-block ml-2"
       >
         <i class="text-2xl fal fa-leaf-maple cursor-pointer text-accent"></i>
@@ -236,7 +236,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Developer')"
+        v-if="user.clearance_levels.includes('Developer')"
         class="relative group inline-block ml-2"
       >
         <i class="text-2xl fal fa-code cursor-pointer text-teal-500"></i>
@@ -250,7 +250,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Moderator')"
+        v-if="user.clearance_levels.includes('Moderator')"
         class="relative group inline-block ml-2"
       >
         <i class="text-2xl fal fa-shield cursor-pointer text-red-500"></i>
@@ -264,7 +264,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Nominator')"
+        v-if="user.clearance_levels.includes('Nominator')"
         class="relative group inline-block ml-2"
       >
         <i class="text-2xl fal fa-gavel cursor-pointer text-orange-500"></i>
@@ -278,7 +278,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Contributor')"
+        v-if="user.clearance_levels.includes('Contributor')"
         class="relative group inline-block ml-2"
       >
         <i
@@ -294,7 +294,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Verified')"
+        v-if="user.clearance_levels.includes('Verified')"
         class="relative group inline-block ml-2"
       >
         <i class="text-2xl fal fa-badge-check cursor-pointer text-blue-500"></i>
@@ -308,7 +308,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Plus')"
+        v-if="user.clearance_levels.includes('Plus')"
         class="relative group inline-block ml-2"
       >
         <i class="text-2xl fal fa-crown cursor-pointer text-yellow-500"></i>
@@ -322,7 +322,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Supporter')"
+        v-if="user.clearance_levels.includes('Supporter')"
         class="relative group inline-block ml-2"
       >
         <i class="text-2xl fal fa-heart cursor-pointer text-pink-500"></i>
@@ -336,7 +336,7 @@
         </div>
       </div>
       <div
-        v-if="user.clearanceLevel.includes('Alumni')"
+        v-if="user.clearance_levels.includes('Alumni')"
         class="relative group inline-block ml-2"
       >
         <i class="text-2xl fal fa-dice cursor-pointer text-gray-500"></i>
@@ -379,7 +379,7 @@
             <th class="text-gray-300 text-sm font-semibold">
               Clearance Level:
             </th>
-            <td class="text-sm">{{ user.clearanceLevel[0] }}</td>
+            <td class="text-sm">{{ user.clearance_levels[0] }}</td>
           </tr>
           <tr>
             <th class="text-gray-300 text-sm font-semibold">Kudos:</th>

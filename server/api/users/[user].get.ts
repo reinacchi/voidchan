@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
 
   if (event.node.req.headers.authorization === config.PrivateAuth) {
     return {
-      clearanceLevel: parseJSON(user[0].clearance_levels),
+      clearance_levels: parseJSON(user[0].clearance_levels),
       auth: user[0].auth_key,
       created_at: user[0].created_at,
       display_name: user[0].display_name,
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     }
   } else {
     return {
-      clearanceLevel: parseJSON(user[0].clearance_levels),
+      clearance_levels: parseJSON(user[0].clearance_levels),
       created_at: user[0].created_at,
       display_name: user[0].display_name,
       files: userFiles.length as number,

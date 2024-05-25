@@ -1,6 +1,6 @@
 import { createPool, PoolConnection } from "mariadb";
 
-export type clearance_levels =
+export type ClearanceLevels =
   | "Project Lead"
   | "Developer"
   | "Moderator"
