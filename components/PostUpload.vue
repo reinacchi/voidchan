@@ -107,12 +107,14 @@
                 <br />
                 <b>Suggestive</b>
                 <br />
-                Sexy or suggestive, even mildly so. Cleavage, breast or ass focus, swimsuits, underwear, skimpy clothes, etc. No nudity.
+                Sexy or suggestive, even mildly so. Cleavage, breast or ass
+                focus, swimsuits, underwear, skimpy clothes, etc. No nudity.
                 <br />
                 <br />
                 <b>Safe</b>
                 <br />
-                100% safe. Nothing sexualised or inappropriate to view in front of others.
+                100% safe. Nothing sexualised or inappropriate to view in front
+                of others.
               </span>
             </div>
           </div>
@@ -192,8 +194,28 @@
           <br />
           <textarea
             v-model="fileTags"
+            @keydown.space.prevent="handleSpace"
+            @input="fetchTagsAutocomplete"
             class="shadow bg-violet-900 bg-opacity-10 border-violet-900 appearance-none border border-solid w-full h-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
           ></textarea>
+          <div
+            v-if="tagsSuggestions.length"
+            class="absolute w-1/6 bg-[#231a31] border border-[#312644] shadow-lg"
+          >
+            <ul class="py-1">
+              <li v-for="(suggestion, index) in tagsSuggestions" :key="index">
+                <button
+                  @click="selectTag(suggestion)"
+                  class="block w-full text-xs px-4 py-2 text-violet-500"
+                >
+                  <span class="inline-flex justify-between w-full">
+                    <span v-html="highlightMatch(suggestion.name)"></span>
+                    <span>{{ suggestion.count }}</span>
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </div>
           <br /><br />
           <label class="text-xl mr-[18rem] font-semibold">Source</label>
           <br />
@@ -219,37 +241,39 @@
       <div class="flex items-center ml-12">
         <label for="rating" class="mr-2 text-xl font-semibold">Rating:</label>
         <div class="relative inline-block group">
-            <i class="fal fa-circle-question pr-2 cursor-pointer"></i>
-            <div
-              class="absolute w-[15rem] mt-2 top-full left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 text-xs rounded-md whitespace-pre-line opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
-            >
-              <span
-                class="arrow-down ml-12 absolute top-0 left-1/2 transform -translate-x-1/2"
-              ></span>
-              <span>
-                <b>Explicit</b>
-                <br />
-                Graphic sex or violence. Sex acts, exposed genitals (pussy,
-                penis, anus), body fluids (cum, pussy juice).
-                <br />
-                <br />
-                <b>Erotica</b>
-                <br />
-                Simple nudity or near-nudity. Bare nipples, ass, areolae,
-                revealing clothes, cameltoes, etc. No sex or exposed genitals.
-                <br />
-                <br />
-                <b>Suggestive</b>
-                <br />
-                Sexy or suggestive, even mildly so. Cleavage, breast or ass focus, swimsuits, underwear, skimpy clothes, etc. No nudity.
-                <br />
-                <br />
-                <b>Safe</b>
-                <br />
-                100% safe. Nothing sexualised or inappropriate to view in front of others.
-              </span>
-            </div>
+          <i class="fal fa-circle-question pr-2 cursor-pointer"></i>
+          <div
+            class="absolute w-[15rem] mt-2 top-full left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 text-xs rounded-md whitespace-pre-line opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+          >
+            <span
+              class="arrow-down ml-12 absolute top-0 left-1/2 transform -translate-x-1/2"
+            ></span>
+            <span>
+              <b>Explicit</b>
+              <br />
+              Graphic sex or violence. Sex acts, exposed genitals (pussy, penis,
+              anus), body fluids (cum, pussy juice).
+              <br />
+              <br />
+              <b>Erotica</b>
+              <br />
+              Simple nudity or near-nudity. Bare nipples, ass, areolae,
+              revealing clothes, cameltoes, etc. No sex or exposed genitals.
+              <br />
+              <br />
+              <b>Suggestive</b>
+              <br />
+              Sexy or suggestive, even mildly so. Cleavage, breast or ass focus,
+              swimsuits, underwear, skimpy clothes, etc. No nudity.
+              <br />
+              <br />
+              <b>Safe</b>
+              <br />
+              100% safe. Nothing sexualised or inappropriate to view in front of
+              others.
+            </span>
           </div>
+        </div>
         <div
           class="border bg-violet-900 bg-opacity-10 border-violet-900 rounded-md p-1 flex items-center"
         >
@@ -326,8 +350,28 @@
       </div>
       <textarea
         v-model="fileTags"
+        @input="fetchTagsAutocomplete"
+        @keyword.space.prevent="handleSpace"
         class="shadow bg-violet-900 bg-opacity-10 border-violet-900 flex ml-12 appearance-none border border-solid w-4/5 h-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
       ></textarea>
+      <div
+        v-if="tagsSuggestions.length"
+        class="absolute w-3/6 bg-[#231a31] border ml-12 border-[#312644] shadow-lg"
+      >
+        <ul class="py-1">
+          <li v-for="(suggestion, index) in tagsSuggestions" :key="index">
+            <button
+              @click="selectTag(suggestion)"
+              class="block w-full text-xs text-left px-4 py-2 text-violet-500"
+            >
+              <span class="inline-flex justify-between w-full">
+                <span v-html="highlightMatch(suggestion.name)"></span>
+                <span>{{ suggestion.count }}</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+      </div>
       <br /><br />
       <div class="flex ml-12 items-center">
         <label class="text-xl font-semibold">Source</label>
@@ -347,16 +391,50 @@
 <script setup lang="ts">
 import { bytesToSize } from "~~/utils/bytesToSize";
 
-const { data } = useAuth();
 const file = ref<FileList | null>(null);
 const previewFile = ref<string | null>(null);
 const fileSize = ref<string | null>(null);
 const fileType = ref<string | null>(null);
 const fileRating = ref<string | null>(null);
-const fileCharacters = ref<string>("");
 const fileSource = ref<string>("");
 const fileTags = ref<string>("");
+const tagsSuggestions = ref<any>([]);
 const { $toast } = useNuxtApp();
+
+async function fetchTagsAutocomplete() {
+  const query = fileTags.value.trim().split(" ").pop() as string;
+
+  if (!query && /^\s*$/.test(query)) {
+    tagsSuggestions.value = [];
+    return;
+  }
+
+  const { data } = await useAsyncData("tags", () =>
+    $fetch(`/api/tags?name=${query}`)
+  );
+
+  tagsSuggestions.value = data.value;
+  console.log(query);
+}
+
+function selectTag(tag: any) {
+  fileTags.value = fileTags.value.replace(/\S+$/, tag.name + " ");
+  tagsSuggestions.value = [];
+}
+
+function handleSpace() {
+  fileTags.value += " ";
+  tagsSuggestions.value = [];
+}
+
+function highlightMatch(tagName: string) {
+  const query = fileTags.value.trim().split(" ").pop() as string;
+
+  const escapedLastWord = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escapedLastWord})`, "gi");
+
+  return tagName.replace(regex, '<span class="font-black">$1</span>');
+}
 
 function handleFileUpload(event: Event) {
   file.value = (event.target as HTMLInputElement).files;
@@ -384,7 +462,8 @@ async function handleFileSubmit() {
   }
 
   if (!file.value) return $toast.error("No file uploaded!");
-  if (!fileRating.value) return $toast.error("Please choose the rating of the file selected!");
+  if (!fileRating.value)
+    return $toast.error("Please choose the rating of the file selected!");
 
   await $fetch("/api/posts", {
     method: "POST",
