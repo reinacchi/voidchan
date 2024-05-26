@@ -20,6 +20,7 @@ CREATE TABLE posts (
     favourites INT DEFAULT 0,
     size INT NOT NULL,
     rating ENUM("explicit", "erotica", "suggestive", "safe") NOT NULL,
+    source VARCHAR(255),
     PRIMARY KEY (id)
 );
 
