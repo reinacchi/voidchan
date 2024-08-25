@@ -193,29 +193,41 @@
           <label class="text-xl mr-[20rem] font-semibold">Tags</label>
           <br />
           <textarea
-            v-model="fileTags"
-            @keydown.space.prevent="handleSpace"
-            @input="fetchTagsAutocomplete"
+            v-model="query"
+            @input="onInput"
+            @keydown.down="highlightSuggestion('down')"
+            @keydown.up="highlightSuggestion('up')"
+            @keydown.enter.prevent="selectSuggestion(activeIndex)"
             class="shadow bg-violet-900 bg-opacity-10 border-violet-900 appearance-none border border-solid w-full h-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
           ></textarea>
           <div
-            v-if="tagsSuggestions.length"
+            v-if="filteredSuggestions.length"
             class="absolute w-1/6 bg-[#231a31] border border-[#312644] shadow-lg"
           >
             <ul class="py-1">
-              <li v-for="(suggestion, index) in tagsSuggestions" :key="index">
+              <li v-for="(suggestion, index) in filteredSuggestions" :key="index">
                 <button
-                  @click="selectTag(suggestion)"
+                  @mousedown.prevent="selectSuggestion(index)"
+                  @mouseover="activeIndex = index"
                   class="block w-full text-xs px-4 py-2 text-violet-500"
                 >
                   <span class="inline-flex justify-between w-full">
-                    <span v-html="highlightMatch(suggestion.name)"></span>
-                    <span>{{ suggestion.count }}</span>
+                    <span v-html="highlightMatch(suggestion)"></span>
                   </span>
                 </button>
               </li>
             </ul>
           </div>
+          <div class="mt-2 flex flex-wrap">
+      <span
+        v-for="tag in tags"
+        :key="tag"
+        class="mr-2 mb-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-200 text-blue-800"
+      >
+        {{ tag }}
+        <button @click="removeTag(tag)" class="ml-1 text-blue-800 focus:outline-none">x</button>
+      </span>
+    </div>
           <br /><br />
           <label class="text-xl mr-[18rem] font-semibold">Source</label>
           <br />
@@ -350,28 +362,8 @@
       </div>
       <textarea
         v-model="fileTags"
-        @input="fetchTagsAutocomplete"
-        @keyword.space.prevent="handleSpace"
         class="shadow bg-violet-900 bg-opacity-10 border-violet-900 flex ml-12 appearance-none border border-solid w-4/5 h-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
       ></textarea>
-      <div
-        v-if="tagsSuggestions.length"
-        class="absolute w-3/6 bg-[#231a31] border ml-12 border-[#312644] shadow-lg"
-      >
-        <ul class="py-1">
-          <li v-for="(suggestion, index) in tagsSuggestions" :key="index">
-            <button
-              @click="selectTag(suggestion)"
-              class="block w-full text-xs text-left px-4 py-2 text-violet-500"
-            >
-              <span class="inline-flex justify-between w-full">
-                <span v-html="highlightMatch(suggestion.name)"></span>
-                <span>{{ suggestion.count }}</span>
-              </span>
-            </button>
-          </li>
-        </ul>
-      </div>
       <br /><br />
       <div class="flex ml-12 items-center">
         <label class="text-xl font-semibold">Source</label>
@@ -398,41 +390,51 @@ const fileType = ref<string | null>(null);
 const fileRating = ref<string | null>(null);
 const fileSource = ref<string>("");
 const fileTags = ref<string>("");
-const tagsSuggestions = ref<any>([]);
 const { $toast } = useNuxtApp();
+const suggestions = ["1girl", "1boy", "swimsuit"];
+const query = ref("");
+const tags = ref<any>([]);
+const activeIndex = ref(-1)
 
-async function fetchTagsAutocomplete() {
-  const query = fileTags.value.trim().split(" ").pop() as string;
+const filteredSuggestions = computed(() => {
+  if (!query.value) return [];
+  return suggestions.filter((suggestion: any) =>
+    suggestion.toLowerCase().includes(query.value.toLowerCase()) &&
+    !tags.value.includes(suggestion)
+  )
+})
 
-  if (!query && /^\s*$/.test(query)) {
-    tagsSuggestions.value = [];
-    return;
+const onInput = () => {
+  activeIndex.value = -1
+}
+
+const selectSuggestion = (index: any) => {
+  if (index >= 0 && index < filteredSuggestions.value.length) {
+    tags.value.push(filteredSuggestions.value[index])
+    query.value = ''
   }
-
-  const { data } = await useAsyncData("tags", () =>
-    $fetch(`/api/tags?name=${query}`)
-  );
-
-  tagsSuggestions.value = data.value;
-  console.log(query);
 }
 
-function selectTag(tag: any) {
-  fileTags.value = fileTags.value.replace(/\S+$/, tag.name + " ");
-  tagsSuggestions.value = [];
+const removeTag = (tag: any) => {
+  tags.value = tags.value.filter((t: any) => t !== tag)
 }
 
-function handleSpace() {
-  fileTags.value += " ";
-  tagsSuggestions.value = [];
+const highlightSuggestion = (direction: any) => {
+  if (direction === 'down') {
+    if (activeIndex.value < filteredSuggestions.value.length - 1) {
+      activeIndex.value++
+    }
+  } else if (direction === 'up') {
+    if (activeIndex.value > 0) {
+      activeIndex.value--
+    }
+  }
 }
 
 function highlightMatch(tagName: string) {
   const query = fileTags.value.trim().split(" ").pop() as string;
-
   const escapedLastWord = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const regex = new RegExp(`(${escapedLastWord})`, "gi");
-
   return tagName.replace(regex, '<span class="font-black">$1</span>');
 }
 
