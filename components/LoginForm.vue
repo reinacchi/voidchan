@@ -30,6 +30,24 @@
         class="bg-gray-50 border border-gray-300 text-gray-600 sm:text-sm focus:outline-none rounded-lg block w-full p-2.5"
       />
     </div>
+    <div>
+      <label class="block mb-2 text-sm font-medium text-left" for="captcha"
+        >Captcha</label
+      >
+      <div class="flex items-center justify-start">
+        <div class="w-40 flex items-center rounded">
+          <span v-if="captcha" v-html="captcha.svg" />
+        </div>
+        <input
+          id="captcha"
+          maxlength="6"
+          placeholder="Captcha"
+          type="text"
+          class="bg-gray-50 border border-gray-300 text-gray-600 sm:text-sm focus:outline-none rounded-lg flex items-center w-2/5 p-2.5"
+          v-model="submission.captcha"
+        />
+      </div>
+    </div>
     <div class="flex items-center justify-between">
       <nuxt-link
         to="/reset-password"
@@ -37,7 +55,11 @@
         >Forgot password?</nuxt-link
       >
     </div>
-    <button @click="handleLogin" type="submit" class="btn glass text-white w-full relative flex items-center justify-center">
+    <button
+      @click="handleLogin"
+      type="submit"
+      class="btn glass text-white w-full relative flex items-center justify-center"
+    >
       <span v-if="!loading">Login</span>
       <div v-if="loading" class="loader"></div>
     </button>
@@ -54,6 +76,7 @@
 
 <script setup lang="ts">
 import { toast } from "vue-sonner";
+import type { Captcha, Submission } from "@/types/vue-shim";
 
 const { signIn } = useAuth();
 const username = ref("");
@@ -76,6 +99,18 @@ function extractPathFromURL(fullURL: string) {
   }
 }
 
+const captcha = ref<Captcha | undefined>(undefined);
+const submission = ref<Submission>({
+  captcha: "",
+  uuid: "",
+});
+
+const getCaptcha = async () => {
+  captcha.value = (await useFetch("/api/captcha/generate")).data
+    .value as Captcha;
+  submission.value.uuid = captcha.value.uuid;
+};
+
 const handleSignIn = async ({
   username,
   password,
@@ -95,22 +130,42 @@ const handleSignIn = async ({
     redirect: false,
   });
 
+  const { data } = await useFetch("/api/captcha/submit", {
+    method: "POST",
+    body: submission.value,
+  });
+
   if (!username) {
     loading.value = false;
-    return toast.error("Invalid username!")
-  };
+    submission.value.captcha = "";
+    getCaptcha();
+    return toast.error("Invalid username!");
+  }
   if (!password) {
     loading.value = false;
+    submission.value.captcha = "";
+    getCaptcha();
     return toast.error("Invalid password!");
   }
 
-  if (error) {
+  if (data.value?.success === 0) {
     loading.value = false;
-    toast.error("Username or password is wrong!");
+    toast.error(data.value.message);
+    submission.value.captcha = "";
+    return getCaptcha();
   } else {
-    return navigateTo(url, { external: true });
+    if (error) {
+      loading.value = false;
+      submission.value.captcha = "";
+      getCaptcha();
+      return toast.error("Username or password is wrong!");
+    } else {
+      return navigateTo(url, { external: true });
+    }
   }
 };
+
+onMounted(getCaptcha);
 </script>
 
 <style scoped>
@@ -213,7 +268,11 @@ const handleSignIn = async ({
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
