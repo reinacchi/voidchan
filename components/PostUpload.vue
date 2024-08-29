@@ -107,12 +107,14 @@
                 <br />
                 <b>Suggestive</b>
                 <br />
-                Sexy or suggestive, even mildly so. Cleavage, breast or ass focus, swimsuits, underwear, skimpy clothes, etc. No nudity.
+                Sexy or suggestive, even mildly so. Cleavage, breast or ass
+                focus, swimsuits, underwear, skimpy clothes, etc. No nudity.
                 <br />
                 <br />
                 <b>Safe</b>
                 <br />
-                100% safe. Nothing sexualised or inappropriate to view in front of others.
+                100% safe. Nothing sexualised or inappropriate to view in front
+                of others.
               </span>
             </div>
           </div>
@@ -191,9 +193,41 @@
           <label class="text-xl mr-[20rem] font-semibold">Tags</label>
           <br />
           <textarea
-            v-model="fileTags"
+            v-model="query"
+            @input="onInput"
+            @keydown.down="highlightSuggestion('down')"
+            @keydown.up="highlightSuggestion('up')"
+            @keydown.enter.prevent="selectSuggestion(activeIndex)"
             class="shadow bg-violet-900 bg-opacity-10 border-violet-900 appearance-none border border-solid w-full h-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
           ></textarea>
+          <div
+            v-if="filteredSuggestions.length"
+            class="absolute w-1/6 bg-[#231a31] border border-[#312644] shadow-lg"
+          >
+            <ul class="py-1">
+              <li v-for="(suggestion, index) in filteredSuggestions" :key="index">
+                <button
+                  @mousedown.prevent="selectSuggestion(index)"
+                  @mouseover="activeIndex = index"
+                  class="block w-full text-xs px-4 py-2 text-violet-500"
+                >
+                  <span class="inline-flex justify-between w-full">
+                    <span v-html="highlightMatch(suggestion)"></span>
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-2 flex flex-wrap">
+      <span
+        v-for="tag in tags"
+        :key="tag"
+        class="mr-2 mb-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-200 text-blue-800"
+      >
+        {{ tag }}
+        <button @click="removeTag(tag)" class="ml-1 text-blue-800 focus:outline-none">x</button>
+      </span>
+    </div>
           <br /><br />
           <label class="text-xl mr-[18rem] font-semibold">Source</label>
           <br />
@@ -219,37 +253,39 @@
       <div class="flex items-center ml-12">
         <label for="rating" class="mr-2 text-xl font-semibold">Rating:</label>
         <div class="relative inline-block group">
-            <i class="fal fa-circle-question pr-2 cursor-pointer"></i>
-            <div
-              class="absolute w-[15rem] mt-2 top-full left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 text-xs rounded-md whitespace-pre-line opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
-            >
-              <span
-                class="arrow-down ml-12 absolute top-0 left-1/2 transform -translate-x-1/2"
-              ></span>
-              <span>
-                <b>Explicit</b>
-                <br />
-                Graphic sex or violence. Sex acts, exposed genitals (pussy,
-                penis, anus), body fluids (cum, pussy juice).
-                <br />
-                <br />
-                <b>Erotica</b>
-                <br />
-                Simple nudity or near-nudity. Bare nipples, ass, areolae,
-                revealing clothes, cameltoes, etc. No sex or exposed genitals.
-                <br />
-                <br />
-                <b>Suggestive</b>
-                <br />
-                Sexy or suggestive, even mildly so. Cleavage, breast or ass focus, swimsuits, underwear, skimpy clothes, etc. No nudity.
-                <br />
-                <br />
-                <b>Safe</b>
-                <br />
-                100% safe. Nothing sexualised or inappropriate to view in front of others.
-              </span>
-            </div>
+          <i class="fal fa-circle-question pr-2 cursor-pointer"></i>
+          <div
+            class="absolute w-[15rem] mt-2 top-full left-1/2 transform -translate-x-1/2 bg-[#27183b] text-white px-2 py-1 text-xs rounded-md whitespace-pre-line opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-300"
+          >
+            <span
+              class="arrow-down ml-12 absolute top-0 left-1/2 transform -translate-x-1/2"
+            ></span>
+            <span>
+              <b>Explicit</b>
+              <br />
+              Graphic sex or violence. Sex acts, exposed genitals (pussy, penis,
+              anus), body fluids (cum, pussy juice).
+              <br />
+              <br />
+              <b>Erotica</b>
+              <br />
+              Simple nudity or near-nudity. Bare nipples, ass, areolae,
+              revealing clothes, cameltoes, etc. No sex or exposed genitals.
+              <br />
+              <br />
+              <b>Suggestive</b>
+              <br />
+              Sexy or suggestive, even mildly so. Cleavage, breast or ass focus,
+              swimsuits, underwear, skimpy clothes, etc. No nudity.
+              <br />
+              <br />
+              <b>Safe</b>
+              <br />
+              100% safe. Nothing sexualised or inappropriate to view in front of
+              others.
+            </span>
           </div>
+        </div>
         <div
           class="border bg-violet-900 bg-opacity-10 border-violet-900 rounded-md p-1 flex items-center"
         >
@@ -347,16 +383,60 @@
 <script setup lang="ts">
 import { bytesToSize } from "~~/utils/bytesToSize";
 
-const { data } = useAuth();
 const file = ref<FileList | null>(null);
 const previewFile = ref<string | null>(null);
 const fileSize = ref<string | null>(null);
 const fileType = ref<string | null>(null);
 const fileRating = ref<string | null>(null);
-const fileCharacters = ref<string>("");
 const fileSource = ref<string>("");
 const fileTags = ref<string>("");
 const { $toast } = useNuxtApp();
+const suggestions = ["1girl", "1boy", "swimsuit"];
+const query = ref("");
+const tags = ref<any>([]);
+const activeIndex = ref(-1)
+
+const filteredSuggestions = computed(() => {
+  if (!query.value) return [];
+  return suggestions.filter((suggestion: any) =>
+    suggestion.toLowerCase().includes(query.value.toLowerCase()) &&
+    !tags.value.includes(suggestion)
+  )
+})
+
+const onInput = () => {
+  activeIndex.value = -1
+}
+
+const selectSuggestion = (index: any) => {
+  if (index >= 0 && index < filteredSuggestions.value.length) {
+    tags.value.push(filteredSuggestions.value[index])
+    query.value = ''
+  }
+}
+
+const removeTag = (tag: any) => {
+  tags.value = tags.value.filter((t: any) => t !== tag)
+}
+
+const highlightSuggestion = (direction: any) => {
+  if (direction === 'down') {
+    if (activeIndex.value < filteredSuggestions.value.length - 1) {
+      activeIndex.value++
+    }
+  } else if (direction === 'up') {
+    if (activeIndex.value > 0) {
+      activeIndex.value--
+    }
+  }
+}
+
+function highlightMatch(tagName: string) {
+  const query = fileTags.value.trim().split(" ").pop() as string;
+  const escapedLastWord = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escapedLastWord})`, "gi");
+  return tagName.replace(regex, '<span class="font-black">$1</span>');
+}
 
 function handleFileUpload(event: Event) {
   file.value = (event.target as HTMLInputElement).files;
@@ -384,7 +464,8 @@ async function handleFileSubmit() {
   }
 
   if (!file.value) return $toast.error("No file uploaded!");
-  if (!fileRating.value) return $toast.error("Please choose the rating of the file selected!");
+  if (!fileRating.value)
+    return $toast.error("Please choose the rating of the file selected!");
 
   await $fetch("/api/posts", {
     method: "POST",
