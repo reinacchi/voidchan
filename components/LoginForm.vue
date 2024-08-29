@@ -56,7 +56,6 @@
       >
     </div>
     <button
-      @click="handleLogin"
       type="submit"
       class="btn glass text-white w-full relative flex items-center justify-center"
     >
@@ -122,6 +121,32 @@ const handleSignIn = async ({
 
   const currentURL = getQueryParam("callbackUrl") as string;
   const path = extractPathFromURL(currentURL);
+
+  if (!username) {
+    loading.value = false;
+    submission.value.captcha = "";
+    getCaptcha();
+    return toast.error("Invalid username!");
+  }
+  const { data } = await useFetch("/api/captcha/submit", {
+    method: "POST",
+    body: submission.value,
+  });
+
+  if (!password) {
+    loading.value = false;
+    submission.value.captcha = "";
+    getCaptcha();
+    return toast.error("Invalid password!");
+  }
+
+  if (data.value?.success === 0) {
+    loading.value = false;
+    toast.error(data.value.message);
+    submission.value.captcha = "";
+    return getCaptcha();
+  }
+
   /* @ts-ignore */
   const { error, url } = await signIn("credentials", {
     username,
@@ -130,10 +155,6 @@ const handleSignIn = async ({
     redirect: false,
   });
 
-  const { data } = await useFetch("/api/captcha/submit", {
-    method: "POST",
-    body: submission.value,
-  });
 
   if (!username) {
     loading.value = false;
