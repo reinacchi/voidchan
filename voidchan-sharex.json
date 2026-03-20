@@ -1,0 +1,14 @@
+{
+  "Version": "19.0.0",
+  "Name": "VoidChan",
+  "DestinationType": "ImageUploader, FileUploader, TextUploader",
+  "RequestMethod": "POST",
+  "RequestURL": "https://voidchan.2rkf.fun/api/providers/sharex",
+  "Body": "MultipartFormData",
+  "FileFormName": "file",
+  "Headers": {
+    "Authorisation": "YOUR_API_TOKEN"
+  },
+  "URL": "{json:url}",
+  "ErrorMessage": "{json:message}"
+}

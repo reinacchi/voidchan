@@ -1,0 +1,19 @@
+{
+  "name": "voidchan",
+  "version": "0.1.1",
+  "description": "**VoidChan** is a flexible CDN infrastructure that perfectly aligns with your needs.",
+  "scripts": {
+    "release": "node scripts/release.js",
+    "sync-version": "node scripts/sync-version.js",
+    "validate-version": "node scripts/validate-version.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reinacchi/voidchan.git"
+  },
+  "author": "reinacchi",
+  "bugs": {
+    "url": "https://github.com/reinacchi/voidchan/issues"
+  },
+  "homepage": "https://github.com/reinacchi/voidchan#readme"
+}

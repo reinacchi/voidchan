@@ -1,0 +1,23 @@
+[package]
+name = "voidchan"
+version = "0.1.1"
+edition = "2024"
+
+[dependencies]
+aws-config = "1.8.12"
+aws-credential-types = "1.2.11"
+aws-sdk-s3 = "1.120.0"
+axum = { version = "0.8.8", features = ["multipart"] }
+chrono = { version = "0.4.44", features = ["serde"] }
+dotenvy = "0.15.7"
+mime_guess = "2.0.5"
+rand = "0.10.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+serenity = { version = "0.12.4", default-features = false, features = ["client", "gateway", "model", "rustls_backend", "cache"] }
+sqlx = { version = "0.8.6", features = ["mysql", "runtime-tokio-rustls", "chrono"] }
+tokio = { version = "1.50.0", features = ["full"] }
+tower-http = { version = "0.6.8", features = ["trace", "cors", "limit"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+uuid = { version = "1.22.0", features = ["v4"] }
