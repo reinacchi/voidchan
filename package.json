@@ -1,7 +1,7 @@
 {
   "name": "voidchan",
   "version": "0.1.1",
-  "description": "**VoidChan** is a flexible CDN infrastructure that perfectly aligns with your needs.",
+  "description": "A self-hosted file hosting and CDN-style upload service built in Rust.",
   "scripts": {
     "release": "node scripts/release.js",
     "sync-version": "node scripts/sync-version.js",
