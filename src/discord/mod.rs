@@ -4,8 +4,9 @@ use serenity::{
     all::{
         ButtonStyle, CommandDataOptionValue, CommandInteraction, CommandOptionType,
         ComponentInteraction, CreateActionRow, CreateButton, CreateCommand, CreateCommandOption,
-        CreateInteractionResponse, CreateInteractionResponseMessage, GatewayIntents, GuildId,
-        Interaction, OnlineStatus, Permissions, Ready,
+        CreateInteractionResponse, CreateInteractionResponseMessage, GatewayIntents, Guild, GuildId,
+        Interaction, Member, OnlineStatus, Permissions, Presence, Ready,
+        User as DiscordUser,
     },
     async_trait,
     client::{Client, Context, EventHandler},
@@ -28,7 +29,8 @@ impl TypeMapKey for ShardManagerContainer {
 }
 
 pub async fn run_bot(state: AppState, token: String, guild_id: u64) -> serenity::Result<()> {
-    let intents = GatewayIntents::GUILDS;
+    let intents =
+        GatewayIntents::GUILDS | GatewayIntents::GUILD_MEMBERS | GatewayIntents::GUILD_PRESENCES;
     let mut client = Client::builder(token, intents)
         .event_handler(Handler {
             state,
@@ -69,6 +71,36 @@ impl EventHandler for Handler {
 
         if let Err(err) = self.guild_id.set_commands(&ctx.http, commands).await {
             tracing::error!("failed to register discord commands: {err}");
+        }
+    }
+
+    async fn guild_create(&self, _ctx: Context, guild: Guild, _is_new: Option<bool>) {
+        if guild.id == self.guild_id {
+            self.state.presence.sync_guild(&guild).await;
+        }
+    }
+
+    async fn guild_member_addition(&self, _ctx: Context, new_member: Member) {
+        if new_member.guild_id == self.guild_id {
+            self.state.presence.upsert_member(&new_member).await;
+        }
+    }
+
+    async fn guild_member_removal(
+        &self,
+        _ctx: Context,
+        guild_id: GuildId,
+        user: DiscordUser,
+        _member_data_if_available: Option<Member>,
+    ) {
+        if guild_id == self.guild_id {
+            self.state.presence.remove_user(user.id.get()).await;
+        }
+    }
+
+    async fn presence_update(&self, _ctx: Context, new_data: Presence) {
+        if new_data.guild_id == Some(self.guild_id) {
+            self.state.presence.update_presence(&new_data).await;
         }
     }
 
@@ -219,6 +251,8 @@ Raw: {}/u/{}.{}",
             .await?;
             return Ok(());
         }
+
+        self.state.presence.upsert_user(&command.user).await;
 
         let discord_id = command.user.id.get().to_string();
         let username = self

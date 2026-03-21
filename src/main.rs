@@ -3,6 +3,7 @@ mod config;
 mod discord;
 mod error;
 mod models;
+mod presence;
 mod routes;
 mod utils;
 
@@ -17,12 +18,15 @@ use axum::{
     body::Body,
     http::{HeaderValue, StatusCode, header},
     response::Response,
-    routing::{get, post},
+    routing::{get, patch, post, put},
 };
 use config::Config;
 use routes::{
     files::{download_file, raw_file, view_file},
     heartbeat::heartbeat,
+    presence::{
+        delete_presence_kv, get_presence, patch_presence_kv, presence_widget_svg, put_presence_kv,
+    },
     upload::upload_file,
 };
 use sqlx::mysql::MySqlPoolOptions;
@@ -93,6 +97,7 @@ async fn main() {
         config: config.clone(),
         db,
         s3,
+        presence: presence::PresenceService::new(),
     };
 
     if let (Some(token), Some(guild_id)) = (config.discord_token.clone(), config.discord_guild_id) {
@@ -123,6 +128,19 @@ async fn main() {
         )
         .route("/favicon.ico", get(favicon))
         .route("/api/providers/sharex", post(upload_file))
+        .route("/api/discord/{discord_user_id}", get(get_presence))
+        .route(
+            "/api/discord/{discord_user_id}/kv",
+            patch(patch_presence_kv),
+        )
+        .route(
+            "/api/discord/{discord_user_id}/kv/{key}",
+            put(put_presence_kv).delete(delete_presence_kv),
+        )
+        .route(
+            "/api/discord/{discord_user_id}/widget.svg",
+            get(presence_widget_svg),
+        )
         .route("/heartbeat", get(heartbeat))
         .route("/u/{id}", get(raw_file))
         .route("/download/{id}", get(download_file))
