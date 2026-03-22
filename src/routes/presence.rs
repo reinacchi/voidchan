@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use axum::{
     Json,
@@ -14,7 +15,7 @@ use crate::{
     app_state::AppState,
     error::AppError,
     models::User,
-    presence::{ActivitySummary, CachedPresence, DiscordUserSummary},
+    presence::{ActivitySummary, CachedPresence, DiscordUserSummary, spotify_image_url},
     utils::{
         html::{escape_attr, escape_html},
         ids::is_valid_hex_colour,
@@ -409,79 +410,237 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
 
     let status_accent = status_colour(&payload.presence.discord_status);
 
-    let username = truncate(
+    let raw_username = truncate(
         non_empty(Some(payload.presence.discord_user.username.as_str()))
             .unwrap_or(payload.presence.discord_user.id.as_str()),
-        28,
+        24,
     );
-    let display_name = truncate(&preferred_display_name(&payload.presence.discord_user), 28);
+    let username = if raw_username.starts_with('@') {
+        raw_username
+    } else {
+        format!("@{}", raw_username)
+    };
+
+    let display_name = truncate(&preferred_display_name(&payload.presence.discord_user), 24);
 
     let activity_line = truncate(
         &primary_activity_line(payload, query.idle_message.as_deref()),
-        48,
+        28,
     );
 
-    let footer_line = truncate(&secondary_activity_line(payload, ""), 56);
+    let secondary_lines = secondary_activity_lines(payload, "")
+        .into_iter()
+        .map(|line| truncate(&line, 30))
+        .collect::<Vec<_>>();
+
+    let elapsed_line = elapsed_activity_line(payload)
+        .map(|value| truncate(&value, 34))
+        .unwrap_or_default();
 
     let avatar_url = discord_avatar_url(&payload.presence.discord_user);
+    let activity_asset_url = widget_activity_asset_url(payload);
+    let activity_small_asset_url = widget_activity_small_asset_url(payload);
+
+    let activity_name = truncate(&widget_activity_name(payload), 24);
+
     let escaped_avatar_url = escape_attr(&avatar_url);
     let escaped_username = escape_html(&username);
     let escaped_display_name = escape_html(&display_name);
     let escaped_activity = escape_html(&activity_line);
-    let escaped_footer = escape_html(&footer_line);
     let escaped_desc = escape_attr(&activity_line);
+    let escaped_activity_name = escape_html(&activity_name.to_uppercase());
+
+    let activity_label_y = 126;
+    let activity_title_y = 146;
+    let secondary_start_y = 162;
+    let secondary_gap = 14;
+    let elapsed_y = if !elapsed_line.is_empty() {
+        secondary_start_y + (secondary_lines.len() as i32 * secondary_gap) + 4
+    } else if secondary_lines.is_empty() {
+        activity_title_y
+    } else {
+        secondary_start_y + ((secondary_lines.len() as i32 - 1) * secondary_gap)
+    };
+
+    let activity_asset_x = 18;
+    let activity_asset_y = 112;
+    let activity_asset_min_size = 65;
+    let activity_asset_size = if activity_asset_url.is_some() {
+        (elapsed_y - activity_asset_y + 4).max(activity_asset_min_size)
+    } else {
+        activity_asset_min_size
+    };
+    let activity_asset_radius = 14;
+
+    let small_asset_size = 24;
+    let small_asset_x = activity_asset_x + activity_asset_size - small_asset_size + 4;
+    let small_asset_y = activity_asset_y + activity_asset_size - small_asset_size + 4;
+    let small_asset_radius = 12;
+
+    let activity_asset_markup = activity_asset_url
+        .as_deref()
+        .map(|url| {
+            format!(
+                r#"  <rect x="{x}" y="{y}" width="{size}" height="{size}" rx="{radius}" fill="{panel_soft}" stroke="{border}" />
+  <image
+    href="{asset_url}"
+    x="{x}"
+    y="{y}"
+    width="{size}"
+    height="{size}"
+    preserveAspectRatio="xMidYMid slice"
+    clip-path="url(#activityAssetClip)"
+  />
+"#,
+                x = activity_asset_x,
+                y = activity_asset_y,
+                size = activity_asset_size,
+                radius = activity_asset_radius,
+                panel_soft = palette.panel_soft,
+                border = palette.border,
+                asset_url = escape_attr(url),
+            )
+        })
+        .unwrap_or_default();
+
+    let activity_small_asset_markup = if activity_asset_url.is_some()
+        && activity_small_asset_url.is_some()
+    {
+        activity_small_asset_url
+                .as_deref()
+                .map(|url| {
+                    format!(
+                        r#"
+  <rect x="{x}" y="{y}" width="{size}" height="{size}" rx="{radius}" fill="{panel}" stroke="{border}" stroke-width="1.5" />
+  <image
+    href="{asset_url}"
+    x="{x}"
+    y="{y}"
+    width="{size}"
+    height="{size}"
+    preserveAspectRatio="xMidYMid slice"
+    clip-path="url(#activitySmallAssetClip)"
+  />
+"#,
+                        x = small_asset_x,
+                        y = small_asset_y,
+                        size = small_asset_size,
+                        radius = small_asset_radius,
+                        panel = palette.panel,
+                        border = palette.border,
+                        asset_url = escape_attr(url),
+                    )
+                })
+                .unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    let text_x = if activity_asset_url.is_some() {
+        activity_asset_x + activity_asset_size + 16
+    } else {
+        18
+    };
+
+    let secondary_svg = secondary_lines
+        .iter()
+        .enumerate()
+        .map(|(index, line)| {
+            let y = secondary_start_y + (index as i32 * secondary_gap);
+            format!(
+                r#"  <text x="{x}" y="{y}" fill="{body}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="11.5">{line}</text>"#,
+                x = text_x,
+                y = y,
+                body = palette.body,
+                line = escape_html(line),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let elapsed_svg = if !elapsed_line.is_empty() {
+        format!(
+            r#"  <text x="{x}" y="{y}" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="11.5">{elapsed}</text>"#,
+            x = text_x,
+            y = elapsed_y,
+            muted = palette.muted,
+            elapsed = escape_html(&elapsed_line),
+        )
+    } else {
+        String::new()
+    };
 
     format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" width="420" height="160" viewBox="0 0 420 160" role="img" aria-labelledby="title desc">
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="380" height="210" viewBox="0 0 380 210" role="img" aria-labelledby="title desc">
   <title id="title">Discord presence for {display_name}</title>
   <desc id="desc">{desc}</desc>
 
   <defs>
     <clipPath id="avatarClip">
-      <rect x="20" y="20" width="64" height="64" rx="12" />
+      <rect x="18" y="18" width="54" height="54" rx="14" />
+    </clipPath>
+    <clipPath id="activityAssetClip">
+      <rect x="{activity_asset_x}" y="{activity_asset_y}" width="{activity_asset_size}" height="{activity_asset_size}" rx="{activity_asset_radius}" />
+    </clipPath>
+    <clipPath id="activitySmallAssetClip">
+      <rect x="{small_asset_x}" y="{small_asset_y}" width="{small_asset_size}" height="{small_asset_size}" rx="{small_asset_radius}" />
     </clipPath>
   </defs>
 
-  <rect x="1" y="1" width="418" height="158" rx="12" fill="{background}" stroke="{border}" />
+  <rect x="1" y="1" width="378" height="208" rx="14" fill="{background}" stroke="{border}" />
 
-  <rect x="20" y="20" width="64" height="64" rx="12" fill="{panel_soft}" stroke="{border}" />
+  <rect x="18" y="18" width="54" height="54" rx="14" fill="{panel_soft}" stroke="{border}" />
   <image
     href="{avatar_url}"
-    x="20"
-    y="20"
-    width="64"
-    height="64"
+    x="18"
+    y="18"
+    width="54"
+    height="54"
     preserveAspectRatio="xMidYMid slice"
     clip-path="url(#avatarClip)"
   />
 
-  <circle cx="78" cy="78" r="9" fill="{background}" />
-  <circle cx="78" cy="78" r="6" fill="{status_accent}" stroke="{panel}" stroke-width="1.5" />
+  <circle cx="64" cy="64" r="9" fill="{background}" />
+  <circle cx="64" cy="64" r="6" fill="{status_accent}" stroke="{panel}" stroke-width="1.5" />
 
-  <text x="100" y="36" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="600">@{username}</text>
-  <text x="100" y="58" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">{display_name}</text>
+  <text x="86" y="40" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">{display_name}</text>
+  <text x="86" y="60" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="500">{username}</text>
 
-  <!-- pushed HR down -->
-  <line x1="20" y1="110" x2="400" y2="110" stroke="{border}" stroke-width="1" />
+  <line x1="6" y1="95" x2="374" y2="95" stroke="{border}" stroke-width="1" />
 
-  <!-- more breathing room -->
-  <text x="20" y="132" fill="{body}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14">{activity}</text>
-  <text x="20" y="148" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="11">{footer}</text>
+{activity_asset_markup}{activity_small_asset_markup}  <text x="{text_x}" y="{activity_label_y}" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.4px">{activity_name}</text>
+  <text x="{text_x}" y="{activity_title_y}" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700">{activity}</text>
+{secondary_svg}
+{elapsed_svg}
 </svg>"#,
         display_name = escaped_display_name,
         desc = escaped_desc,
+        activity_asset_x = activity_asset_x,
+        activity_asset_y = activity_asset_y,
+        activity_asset_size = activity_asset_size,
+        activity_asset_radius = activity_asset_radius,
+        small_asset_x = small_asset_x,
+        small_asset_y = small_asset_y,
+        small_asset_size = small_asset_size,
+        small_asset_radius = small_asset_radius,
         background = background,
         border = palette.border,
         panel = palette.panel,
-        panel_soft = palette.panel_soft,
         avatar_url = escaped_avatar_url,
         status_accent = status_accent,
         username = escaped_username,
         title_color = palette.title,
         muted = palette.muted,
-        body = palette.body,
+        activity_asset_markup = activity_asset_markup,
+        activity_small_asset_markup = activity_small_asset_markup,
+        text_x = text_x,
+        activity_label_y = activity_label_y,
+        activity_title_y = activity_title_y,
+        activity_name = escaped_activity_name,
         activity = escaped_activity,
-        footer = escaped_footer,
+        secondary_svg = secondary_svg,
+        elapsed_svg = elapsed_svg,
+        panel_soft = palette.panel_soft,
     )
 }
 
@@ -506,12 +665,59 @@ fn discord_avatar_url(user: &DiscordUserSummary) -> String {
     )
 }
 
-fn primary_activity_line(payload: &PresencePayload, idle_message: Option<&str>) -> String {
-    if let Some(spotify) = payload.presence.spotify.as_ref() {
-        return format!("Listening to {}", spotify.song);
+fn widget_uses_spotify(payload: &PresencePayload) -> bool {
+    payload.presence.spotify.is_some()
+}
+
+fn widget_spotify_activity(payload: &PresencePayload) -> Option<&ActivitySummary> {
+    payload.presence.activities.iter().find(|activity| {
+        activity.kind == "listening" || activity.name.eq_ignore_ascii_case("spotify")
+    })
+}
+
+fn widget_discord_activity(payload: &PresencePayload) -> Option<&ActivitySummary> {
+    payload.presence.activities.iter().find(|activity| {
+        activity.kind != "custom"
+            && activity.kind != "listening"
+            && !activity.name.eq_ignore_ascii_case("spotify")
+    })
+}
+
+fn widget_activity_name(payload: &PresencePayload) -> String {
+    if widget_uses_spotify(payload) {
+        return "Spotify".to_string();
     }
 
-    if let Some(activity) = rich_activity(payload) {
+    widget_discord_activity(payload)
+        .and_then(|activity| non_empty(Some(activity.name.as_str())))
+        .unwrap_or("Current activity")
+        .to_string()
+}
+
+fn widget_activity_asset_url(payload: &PresencePayload) -> Option<String> {
+    if widget_uses_spotify(payload) {
+        return widget_spotify_activity(payload).and_then(activity_asset_image_url);
+    }
+
+    widget_discord_activity(payload).and_then(activity_asset_image_url)
+}
+
+fn widget_activity_small_asset_url(payload: &PresencePayload) -> Option<String> {
+    if widget_uses_spotify(payload) {
+        return widget_spotify_activity(payload).and_then(activity_small_asset_image_url);
+    }
+
+    widget_discord_activity(payload).and_then(activity_small_asset_image_url)
+}
+
+fn primary_activity_line(payload: &PresencePayload, idle_message: Option<&str>) -> String {
+    if widget_uses_spotify(payload) {
+        if let Some(spotify) = payload.presence.spotify.as_ref() {
+            return format!("Listening to {}", spotify.song);
+        }
+    }
+
+    if let Some(activity) = widget_discord_activity(payload) {
         return format_primary_activity(activity);
     }
 
@@ -524,54 +730,124 @@ fn primary_activity_line(payload: &PresencePayload, idle_message: Option<&str>) 
         .to_string()
 }
 
-fn secondary_activity_line(payload: &PresencePayload, status_line: &str) -> String {
-    if let Some(spotify) = payload.presence.spotify.as_ref() {
-        return match spotify.album.as_deref() {
-            Some(album) if !album.trim().is_empty() => {
-                format!("{} • {}", spotify.artist, album)
+fn secondary_activity_lines(payload: &PresencePayload, status_line: &str) -> Vec<String> {
+    if widget_uses_spotify(payload) {
+        if let Some(spotify) = payload.presence.spotify.as_ref() {
+            let mut lines = Vec::new();
+
+            if !spotify.artist.trim().is_empty() {
+                lines.push(format!("By {}", spotify.artist));
             }
-            _ => spotify.artist.clone(),
-        };
+
+            if let Some(album) = spotify
+                .album
+                .as_deref()
+                .filter(|value| !value.trim().is_empty())
+            {
+                lines.push(format!("on {}", album));
+            }
+
+            return lines;
+        }
     }
 
-    if let Some(activity) = rich_activity(payload) {
-        if let Some(context) = activity_context_line(activity) {
+    if let Some(activity) = widget_discord_activity(payload) {
+        if let Some(context) = activity_context_lines(activity) {
             return context;
         }
 
         if let Some(custom) = custom_status_text(payload) {
-            return custom;
+            return vec![custom];
         }
 
-        return format!(
-            "{} • {}",
-            pretty_activity_kind(&activity.kind),
-            activity.name
-        );
+        return vec![
+            pretty_activity_kind(&activity.kind).to_string(),
+            activity.name.clone(),
+        ];
     }
 
     if let Some(custom) = custom_status_text(payload) {
-        return custom;
+        return vec![custom];
     }
 
     if payload.kv.is_empty() {
-        status_line.to_string()
-    } else {
+        if status_line.trim().is_empty() {
+            return Vec::new();
+        }
+
+        return vec![status_line.to_string()];
+    }
+
+    vec![
+        status_line.to_string(),
         format!(
-            "{} • {} KV entr{}",
-            status_line,
+            "{} KV entr{}",
             payload.kv.len(),
             if payload.kv.len() == 1 { "y" } else { "ies" }
-        )
-    }
+        ),
+    ]
 }
 
-fn rich_activity(payload: &PresencePayload) -> Option<&ActivitySummary> {
-    payload
-        .presence
-        .activities
-        .iter()
-        .find(|activity| activity.kind != "custom")
+fn activity_asset_image_url(activity: &ActivitySummary) -> Option<String> {
+    let assets = activity.assets.as_ref()?;
+    let large_image = non_empty(assets.large_image.as_deref())?;
+
+    if let Some(url) = spotify_image_url(large_image) {
+        return Some(url);
+    }
+
+    if let Some(path) = large_image.strip_prefix("mp:") {
+        return Some(format!(
+            "https://media.discordapp.net/{}",
+            path.trim_start_matches('/')
+        ));
+    }
+
+    if large_image.starts_with("https://") || large_image.starts_with("http://") {
+        return Some(large_image.to_string());
+    }
+
+    activity
+        .application_id
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+        .map(|application_id| {
+            format!(
+                "https://cdn.discordapp.com/app-assets/{}/{}.png",
+                application_id, large_image
+            )
+        })
+}
+
+fn activity_small_asset_image_url(activity: &ActivitySummary) -> Option<String> {
+    let assets = activity.assets.as_ref()?;
+    let small_image = non_empty(assets.small_image.as_deref())?;
+
+    if let Some(url) = spotify_image_url(small_image) {
+        return Some(url);
+    }
+
+    if let Some(path) = small_image.strip_prefix("mp:") {
+        return Some(format!(
+            "https://media.discordapp.net/{}",
+            path.trim_start_matches('/')
+        ));
+    }
+
+    if small_image.starts_with("https://") || small_image.starts_with("http://") {
+        return Some(small_image.to_string());
+    }
+
+    activity
+        .application_id
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+        .map(|application_id| {
+            format!(
+                "https://cdn.discordapp.com/app-assets/{}/{}.png",
+                application_id, small_image
+            )
+        })
 }
 
 fn custom_status_text(payload: &PresencePayload) -> Option<String> {
@@ -613,15 +889,61 @@ fn format_primary_activity(activity: &ActivitySummary) -> String {
         .unwrap_or_else(|| pretty_activity_kind(&activity.kind).to_string())
 }
 
-fn activity_context_line(activity: &ActivitySummary) -> Option<String> {
+fn activity_context_lines(activity: &ActivitySummary) -> Option<Vec<String>> {
     match (
         non_empty(activity.details.as_deref()),
         non_empty(activity.state.as_deref()),
     ) {
-        (Some(details), Some(state)) => Some(format!("{} • {}", details, state)),
-        (Some(details), None) => Some(details.to_string()),
-        (None, Some(state)) => Some(state.to_string()),
+        (Some(details), Some(state)) => Some(vec![details.to_string(), state.to_string()]),
+        (Some(details), None) => Some(vec![details.to_string()]),
+        (None, Some(state)) => Some(vec![state.to_string()]),
         (None, None) => None,
+    }
+}
+
+fn elapsed_activity_line(payload: &PresencePayload) -> Option<String> {
+    if widget_uses_spotify(payload) {
+        if let Some(spotify) = payload.presence.spotify.as_ref() {
+            if let Some(start) = spotify.timestamps.as_ref().and_then(|value| value.start) {
+                return Some(format!(
+                    "Elapsed {}",
+                    format_elapsed_from_unix_millis(start as i64)
+                ));
+            }
+        }
+
+        return None;
+    }
+
+    if let Some(activity) = widget_discord_activity(payload) {
+        if let Some(start) = activity.timestamps.as_ref().and_then(|value| value.start) {
+            return Some(format!(
+                "Elapsed {}",
+                format_elapsed_from_unix_millis(start as i64)
+            ));
+        }
+    }
+
+    None
+}
+
+fn format_elapsed_from_unix_millis(start_ms: i64) -> String {
+    let now_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_millis() as i64)
+        .unwrap_or(start_ms);
+
+    let elapsed_ms = now_ms.saturating_sub(start_ms);
+    let total_seconds = (elapsed_ms / 1000).max(0);
+
+    let hours = total_seconds / 3600;
+    let minutes = (total_seconds % 3600) / 60;
+    let seconds = total_seconds % 60;
+
+    if hours > 0 {
+        format!("{hours}:{minutes:02}:{seconds:02}")
+    } else {
+        format!("{minutes}:{seconds:02}")
     }
 }
 

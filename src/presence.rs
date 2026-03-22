@@ -153,27 +153,29 @@ impl CachedPresence {
             presence.status,
             OnlineStatus::Offline | OnlineStatus::Invisible
         );
+        let has_fresh_activities = !presence.activities.is_empty();
         let activities = if is_offline {
             Vec::new()
-        } else if presence.activities.is_empty() {
-            existing
-                .map(|value| value.activities.clone())
-                .unwrap_or_default()
-        } else {
+        } else if has_fresh_activities {
             presence
                 .activities
                 .iter()
                 .map(ActivitySummary::from_activity)
                 .collect::<Vec<_>>()
+        } else {
+            existing
+                .map(|value| value.activities.clone())
+                .unwrap_or_default()
         };
         let spotify = if is_offline {
             None
-        } else {
+        } else if has_fresh_activities {
             activities
                 .iter()
                 .find(|activity| is_spotify_summary(activity))
                 .map(SpotifySummary::from_summary)
-                .or_else(|| existing.and_then(|value| value.spotify.clone()))
+        } else {
+            existing.and_then(|value| value.spotify.clone())
         };
 
         Self {
@@ -490,7 +492,7 @@ impl SpotifySummary {
     }
 }
 
-fn spotify_image_url(value: &str) -> Option<String> {
+pub fn spotify_image_url(value: &str) -> Option<String> {
     value
         .strip_prefix("spotify:")
         .map(|hash| format!("https://i.scdn.co/image/{hash}"))
