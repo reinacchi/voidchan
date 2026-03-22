@@ -1,12 +1,13 @@
 use std::{collections::BTreeMap, sync::Arc};
 
+use chrono::{DateTime, Utc};
 use serenity::{
     all::{
         ButtonStyle, CommandDataOptionValue, CommandInteraction, CommandOptionType,
         ComponentInteraction, CreateActionRow, CreateButton, CreateCommand, CreateCommandOption,
-        CreateInteractionResponse, CreateInteractionResponseMessage, GatewayIntents, Guild,
-        GuildId, Interaction, Member, OnlineStatus, Permissions, Presence, Ready,
-        User as DiscordUser,
+        CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter, CreateInteractionResponse,
+        CreateInteractionResponseMessage, GatewayIntents, Guild, GuildId, Interaction, Member,
+        OnlineStatus, Permissions, Presence, Ready, User as DiscordUser,
     },
     async_trait,
     client::{Client, Context, EventHandler},
@@ -190,35 +191,63 @@ impl Handler {
             let extension = row
                 .try_get::<String, _>("extension")
                 .unwrap_or_else(|_| "bin".to_string());
-            let message = format!(
-                "**File detail**
-ID: `{}`
-Name: {}
-Type: {}
-Size: {} bytes
-Uploader: {}
-Created: {}
-View: {}/v/{}.{}
-Raw: {}/u/{}.{}",
-                id,
-                row.try_get::<Option<String>, _>("original_name")
-                    .ok()
-                    .flatten()
-                    .unwrap_or_else(|| "(unknown)".to_string()),
-                row.try_get::<String, _>("mime_type").unwrap_or_default(),
-                row.try_get::<u64, _>("size").unwrap_or_default(),
-                row.try_get::<String, _>("uploader").unwrap_or_default(),
-                row.try_get::<chrono::NaiveDateTime, _>("created_at")
-                    .map(|v| v.to_string())
-                    .unwrap_or_default(),
-                self.state.config.base_url.trim_end_matches('/'),
-                file_id,
-                extension,
-                self.state.config.base_url.trim_end_matches('/'),
-                file_id,
-                extension,
-            );
-            respond_component(ctx, component, true, message).await?;
+            let embed = CreateEmbed::new()
+                .title("File detail")
+                .field("ID", format!("`{}`", id), true)
+                .field(
+                    "Name",
+                    row.try_get::<Option<String>, _>("original_name")
+                        .ok()
+                        .flatten()
+                        .unwrap_or_else(|| "(unknown)".to_string()),
+                    true,
+                )
+                .field(
+                    "Type",
+                    row.try_get::<String, _>("mime_type").unwrap_or_default(),
+                    true,
+                )
+                .field(
+                    "Size",
+                    format!(
+                        "{} bytes",
+                        row.try_get::<u64, _>("size").unwrap_or_default()
+                    ),
+                    true,
+                )
+                .field(
+                    "Uploader",
+                    row.try_get::<String, _>("uploader").unwrap_or_default(),
+                    true,
+                )
+                .field(
+                    "Created",
+                    row.try_get::<chrono::NaiveDateTime, _>("created_at")
+                        .map(|v| v.to_string())
+                        .unwrap_or_default(),
+                    false,
+                )
+                .field(
+                    "View URL",
+                    format!(
+                        "{}/v/{}.{}",
+                        self.state.config.base_url.trim_end_matches('/'),
+                        file_id,
+                        extension
+                    ),
+                    false,
+                )
+                .field(
+                    "Raw URL",
+                    format!(
+                        "{}/u/{}.{}",
+                        self.state.config.base_url.trim_end_matches('/'),
+                        file_id,
+                        extension
+                    ),
+                    false,
+                );
+            respond_component_embed(ctx, component, true, embed).await?;
             return Ok(());
         }
 
@@ -292,12 +321,18 @@ Raw: {}/u/{}.{}",
 
         let runners = shard_manager.runners.lock().await;
 
-        let content = match runners.get(&ctx.shard_id).and_then(|runner| runner.latency) {
-            Some(latency) => format!("Pong! `{}` ms", latency.as_millis()),
-            None => "Pong! Latency not available yet.".to_string(),
+        let embed = match runners.get(&ctx.shard_id).and_then(|runner| runner.latency) {
+            Some(latency) => CreateEmbed::new().title("Pong").field(
+                "Gateway latency",
+                format!("`{}` ms", latency.as_millis()),
+                false,
+            ),
+            None => CreateEmbed::new()
+                .title("Pong")
+                .description("Latency is not available yet."),
         };
 
-        respond(ctx, command, true, content).await?;
+        respond_embed(ctx, command, true, embed).await?;
         Ok(())
     }
 
@@ -408,14 +443,14 @@ Raw: {}/u/{}.{}",
             .execute(&self.state.db)
             .await?;
 
-        respond(
+        respond_embed(
             ctx,
             command,
             true,
-            format!(
-                "Updated config. URL mode: `/{}` | Hex colour: `{}`",
-                next_mode, next_colour
-            ),
+            CreateEmbed::new()
+                .title("Configuration updated")
+                .field("URL mode", format!("`/{}`", next_mode), true)
+                .field("Hex colour", format!("`{}`", next_colour), true),
         )
         .await?;
         Ok(())
@@ -469,7 +504,6 @@ Raw: {}/u/{}.{}",
             respond(ctx, command, true, "Register first with `/register`.").await?;
             return Ok(());
         };
-
         let total_uploads: i64 =
             sqlx::query_scalar("SELECT COUNT(*) FROM files WHERE uploader_id = ?")
                 .bind(user.id)
@@ -481,16 +515,62 @@ Raw: {}/u/{}.{}",
                 .fetch_one(&self.state.db)
                 .await?;
 
-        respond(
-            ctx,
-            command,
-            true,
-            format!(
-                "**Profile**\nUsername: `{}`\nPreferred URL mode: `/{}`\nPreferred hex colour: `{}`\nTotal files uploaded: `{}`\nTotal KV entries: `{}`",
-                user.username, user.preferred_url_mode, user.preferred_hex_colour, total_uploads, total_kv_entries
-            ),
-        )
-        .await?;
+        let account_creation = DateTime::<Utc>::from_naive_utc_and_offset(user.created_at, Utc);
+        let embed = CreateEmbed::new()
+            .author(
+                CreateEmbedAuthor::new(format!("@{}", user.username)).icon_url(format!(
+                    "https://cdn.discordapp.com/avatars/{}/{}.png?size=256",
+                    command.user.id,
+                    command
+                        .user
+                        .avatar
+                        .as_ref()
+                        .map(|hash| hash.to_string())
+                        .unwrap_or("0".into())
+                )),
+            )
+            .title("Your Profile")
+            .field(
+                "VoidChan Account Creation",
+                format!("<t:{}:F>", account_creation.timestamp()),
+                false,
+            )
+            .field(
+                "Preferred URL Mode",
+                format!("`/{}`", user.preferred_url_mode),
+                true,
+            )
+            .field(
+                "Preferred Hex Colour",
+                format!("`{}`", user.preferred_hex_colour),
+                true,
+            )
+            .field(
+                "Total Files",
+                format!("```prolog\n{}```", total_uploads),
+                false,
+            )
+            .field(
+                "Total KV Entries",
+                format!("```prolog\n{}```", total_kv_entries),
+                false,
+            )
+            .thumbnail(format!(
+                "https://cdn.discordapp.com/avatars/{}/{}.png?size=256",
+                command.user.id,
+                command
+                    .user
+                    .avatar
+                    .as_ref()
+                    .map(|hash| hash.to_string())
+                    .unwrap_or("0".into()),
+            ))
+            .footer(CreateEmbedFooter::new(format!(
+                "ID: {}",
+                user.discord_user_id.unwrap_or_default()
+            )));
+
+        respond_embed(ctx, command, true, embed).await?;
         Ok(())
     }
 
@@ -500,14 +580,14 @@ Raw: {}/u/{}.{}",
             return Ok(());
         };
 
-        let (content, components) = self.render_files_page_for_user(user.id, 0).await?;
+        let (embed, components) = self.render_files_page_for_user(user.id, 0).await?;
 
         command
             .create_response(
                 &ctx.http,
                 CreateInteractionResponse::Message(
                     CreateInteractionResponseMessage::new()
-                        .content(content)
+                        .add_embed(embed)
                         .ephemeral(true)
                         .components(components),
                 ),
@@ -525,13 +605,13 @@ Raw: {}/u/{}.{}",
         };
 
         let Some(option) = command.data.options.first() else {
-            let (content, components) = self.render_kv_page_for_user(user.id, 0).await?;
+            let (embed, components) = self.render_kv_page_for_user(user.id, 0).await?;
             command
                 .create_response(
                     &ctx.http,
                     CreateInteractionResponse::Message(
                         CreateInteractionResponseMessage::new()
-                            .content(content)
+                            .add_embed(embed)
                             .ephemeral(true)
                             .components(components),
                     ),
@@ -585,14 +665,18 @@ Raw: {}/u/{}.{}",
                 .execute(&self.state.db)
                 .await?;
 
-                respond(
+                respond_embed(
                     ctx,
                     command,
                     true,
-                    format!(
-                        "Stored KV entry `{key}` with {} character(s).",
-                        value.chars().count()
-                    ),
+                    CreateEmbed::new()
+                        .title("KV Entry Stored")
+                        .field("Key", format!("`{key}`"), true)
+                        .field(
+                            "Length",
+                            format!("`{}` character(s)", value.chars().count()),
+                            true,
+                        ),
                 )
                 .await?;
             }
@@ -627,24 +711,51 @@ Raw: {}/u/{}.{}",
 
                     if let Some(row) = row {
                         let value = row.try_get::<String, _>("kv_value").unwrap_or_default();
-                        respond(ctx, command, true, format!("`{key}` = ```\n{value}\n```")).await?;
-                    } else {
-                        respond(
+                        let value_len = value.chars().count();
+                        let display_value = if value_len > 1000 {
+                            format!("{}...", value.chars().take(1000).collect::<String>())
+                        } else {
+                            value
+                        };
+
+                        respond_embed(
                             ctx,
                             command,
                             true,
-                            format!("No KV entry found for `{key}`."),
+                            CreateEmbed::new()
+                                .title("KV Entry")
+                                .field("Key", format!("`{key}`"), true)
+                                .field("Length", format!("`{value_len}` character(s)"), true)
+                                .field(
+                                    "Value",
+                                    format!(
+                                        "```
+{display_value}
+```"
+                                    ),
+                                    false,
+                                ),
+                        )
+                        .await?;
+                    } else {
+                        respond_embed(
+                            ctx,
+                            command,
+                            true,
+                            CreateEmbed::new()
+                                .title("KV Entry Not Found")
+                                .description(format!("No KV entry found for `{key}`.")),
                         )
                         .await?;
                     }
                 } else {
-                    let (content, components) = self.render_kv_page_for_user(user.id, 0).await?;
+                    let (embed, components) = self.render_kv_page_for_user(user.id, 0).await?;
                     command
                         .create_response(
                             &ctx.http,
                             CreateInteractionResponse::Message(
                                 CreateInteractionResponseMessage::new()
-                                    .content(content)
+                                    .add_embed(embed)
                                     .ephemeral(true)
                                     .components(components),
                             ),
@@ -659,19 +770,21 @@ Raw: {}/u/{}.{}",
                     .execute(&self.state.db)
                     .await?;
 
-                respond(
+                respond_embed(
                     ctx,
                     command,
                     true,
-                    format!(
-                        "Cleared `{}` KV entr{}.",
-                        result.rows_affected(),
-                        if result.rows_affected() == 1 {
-                            "y"
-                        } else {
-                            "ies"
-                        }
-                    ),
+                    CreateEmbed::new()
+                        .title("KV Entry Cleared")
+                        .description(format!(
+                            "Cleared `{}` KV entr{}.",
+                            result.rows_affected(),
+                            if result.rows_affected() == 1 {
+                                "y"
+                            } else {
+                                "ies"
+                            }
+                        )),
                 )
                 .await?;
             }
@@ -749,15 +862,25 @@ Raw: {}/u/{}.{}",
                         .await?;
 
                 if result.rows_affected() == 0 {
-                    respond(
+                    respond_embed(
                         ctx,
                         command,
                         true,
-                        format!("No KV entry found for `{key}`."),
+                        CreateEmbed::new()
+                            .title("KV Entry Not Found")
+                            .description(format!("No KV entry found for `{key}`.")),
                     )
                     .await?;
                 } else {
-                    respond(ctx, command, true, format!("Deleted KV entry `{key}`.")).await?;
+                    respond_embed(
+                        ctx,
+                        command,
+                        true,
+                        CreateEmbed::new()
+                            .title("KV Entry Deleted")
+                            .description(format!("Deleted KV entry `{key}`.")),
+                    )
+                    .await?;
                 }
             }
             _ => {
@@ -792,7 +915,7 @@ Raw: {}/u/{}.{}",
         .fetch_all(&self.state.db)
         .await?;
 
-        let mut lines = vec!["**Users**".to_string()];
+        let mut lines = Vec::new();
         for row in rows {
             lines.push(format!(
                 "• `{}` | Discord: `{}` | mode `/{}` | colour `{}` | uploads `{}` | blacklisted `{}`",
@@ -805,7 +928,15 @@ Raw: {}/u/{}.{}",
             ));
         }
 
-        respond(ctx, command, true, lines.join("\n")).await?;
+        respond_embed(
+            ctx,
+            command,
+            true,
+            CreateEmbed::new()
+                .title("Users")
+                .description(lines.join("\n")),
+        )
+        .await?;
         Ok(())
     }
 
@@ -819,14 +950,14 @@ Raw: {}/u/{}.{}",
             return Ok(());
         }
 
-        let (content, components) = self.render_admin_files_page(0).await?;
+        let (embed, components) = self.render_admin_files_page(0).await?;
 
         command
             .create_response(
                 &ctx.http,
                 CreateInteractionResponse::Message(
                     CreateInteractionResponseMessage::new()
-                        .content(content)
+                        .add_embed(embed)
                         .ephemeral(true)
                         .components(components),
                 ),
@@ -872,11 +1003,14 @@ Raw: {}/u/{}.{}",
             return Ok(());
         }
 
-        respond(
+        respond_embed(
             ctx,
             command,
             true,
-            format!("Updated blacklist for `{discord_user_id}` to `{blacklisted}`."),
+            CreateEmbed::new()
+                .title("Blacklist updated")
+                .field("Discord user ID", format!("`{discord_user_id}`"), true)
+                .field("Blacklisted", format!("`{blacklisted}`"), true),
         )
         .await?;
         Ok(())
@@ -932,7 +1066,15 @@ Raw: {}/u/{}.{}",
             .execute(&self.state.db)
             .await?;
 
-        respond(ctx, command, true, format!("Deleted file `{file_id}`.")).await?;
+        respond_embed(
+            ctx,
+            command,
+            true,
+            CreateEmbed::new()
+                .title("File deleted")
+                .description(format!("Deleted file `{file_id}`.")),
+        )
+        .await?;
         Ok(())
     }
 
@@ -940,7 +1082,7 @@ Raw: {}/u/{}.{}",
         &self,
         user_id: u64,
         page: u64,
-    ) -> Result<(String, Vec<CreateActionRow>), AppError> {
+    ) -> Result<(CreateEmbed, Vec<CreateActionRow>), AppError> {
         let total_files: i64 =
             sqlx::query_scalar("SELECT COUNT(*) FROM files WHERE uploader_id = ?")
                 .bind(user_id)
@@ -951,7 +1093,9 @@ Raw: {}/u/{}.{}",
         let total_pages = total_pages(total_files, page_size);
         if total_pages == 0 {
             return Ok((
-                "You have not uploaded any files yet.".to_string(),
+                CreateEmbed::new()
+                    .title("Your uploaded files")
+                    .description("You have not uploaded any files yet."),
                 Vec::new(),
             ));
         }
@@ -973,11 +1117,7 @@ Raw: {}/u/{}.{}",
         .fetch_all(&self.state.db)
         .await?;
 
-        let mut lines = vec![format!(
-            "**Your uploaded files** (page {}/{})",
-            current_page + 1,
-            total_pages
-        )];
+        let mut lines = Vec::new();
         for row in rows {
             let id: String = row.try_get("id").unwrap_or_default();
             let extension = row.try_get::<String, _>("extension").unwrap_or_default();
@@ -996,12 +1136,23 @@ Raw: {}/u/{}.{}",
                 id,
                 extension
             );
-            lines.push(format!("• `{}` — {} — {}", id, name, url));
-            lines.push(format!("  Uploaded: {}", created));
+            lines.push(format!(
+                "• `{}` — {}
+  URL: {}
+  Uploaded: {}",
+                id, name, url, created
+            ));
         }
 
         Ok((
-            lines.join("\n"),
+            CreateEmbed::new()
+                .title("Your uploaded files")
+                .description(lines.join("\n\n"))
+                .footer(serenity::builder::CreateEmbedFooter::new(format!(
+                    "Page {}/{}",
+                    current_page + 1,
+                    total_pages
+                ))),
             owned_pagination_components("files", user_id, current_page, total_pages),
         ))
     }
@@ -1010,7 +1161,7 @@ Raw: {}/u/{}.{}",
         &self,
         user_id: u64,
         page: u64,
-    ) -> Result<(String, Vec<CreateActionRow>), AppError> {
+    ) -> Result<(CreateEmbed, Vec<CreateActionRow>), AppError> {
         let total_rows: i64 =
             sqlx::query_scalar("SELECT COUNT(*) FROM user_presence_kv WHERE user_id = ?")
                 .bind(user_id)
@@ -1020,7 +1171,12 @@ Raw: {}/u/{}.{}",
         let page_size = 20_u64;
         let total_pages = total_pages(total_rows, page_size);
         if total_pages == 0 {
-            return Ok(("You have no KV entries yet.".to_string(), Vec::new()));
+            return Ok((
+                CreateEmbed::new()
+                    .title("Your KV Keys")
+                    .description("You have no KV entries yet."),
+                Vec::new(),
+            ));
         }
 
         let current_page = clamp_page(page, total_pages);
@@ -1040,12 +1196,7 @@ Raw: {}/u/{}.{}",
         .fetch_all(&self.state.db)
         .await?;
 
-        let mut lines = vec![format!(
-            "**Your KV keys** (page {}/{}, total {})",
-            current_page + 1,
-            total_pages,
-            total_rows
-        )];
+        let mut lines = Vec::new();
         for row in rows {
             lines.push(format!(
                 "• `{}`",
@@ -1054,7 +1205,15 @@ Raw: {}/u/{}.{}",
         }
 
         Ok((
-            lines.join("\n"),
+            CreateEmbed::new()
+                .title("Your KV Keys")
+                .description(lines.join("\n"))
+                .footer(serenity::builder::CreateEmbedFooter::new(format!(
+                    "Page {}/{} • Total {}",
+                    current_page + 1,
+                    total_pages,
+                    total_rows
+                ))),
             owned_pagination_components("kv", user_id, current_page, total_pages),
         ))
     }
@@ -1062,7 +1221,7 @@ Raw: {}/u/{}.{}",
     async fn render_admin_files_page(
         &self,
         page: u64,
-    ) -> Result<(String, Vec<CreateActionRow>), AppError> {
+    ) -> Result<(CreateEmbed, Vec<CreateActionRow>), AppError> {
         let total_files: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM files")
             .fetch_one(&self.state.db)
             .await?;
@@ -1070,7 +1229,12 @@ Raw: {}/u/{}.{}",
         let page_size = 10_u64;
         let total_pages = total_pages(total_files, page_size);
         if total_pages == 0 {
-            return Ok(("No uploaded files found.".to_string(), Vec::new()));
+            return Ok((
+                CreateEmbed::new()
+                    .title("Recent Uploaded Files")
+                    .description("No uploaded files found."),
+                Vec::new(),
+            ));
         }
 
         let current_page = clamp_page(page, total_pages);
@@ -1088,11 +1252,7 @@ Raw: {}/u/{}.{}",
         .fetch_all(&self.state.db)
         .await?;
 
-        let mut content = vec![format!(
-            "**Recent uploaded files** (page {}/{})",
-            current_page + 1,
-            total_pages
-        )];
+        let mut content = Vec::new();
         let mut buttons: Vec<CreateButton> = Vec::new();
         for row in rows {
             let id: String = row.try_get("id").unwrap_or_default();
@@ -1128,7 +1288,20 @@ Raw: {}/u/{}.{}",
             components.push(nav);
         }
 
-        Ok((content.join("\n"), components))
+        Ok((
+            CreateEmbed::new()
+                .title("Recent Uploaded Files")
+                .description(content.join(
+                    "
+",
+                ))
+                .footer(serenity::builder::CreateEmbedFooter::new(format!(
+                    "Page {}/{}",
+                    current_page + 1,
+                    total_pages
+                ))),
+            components,
+        ))
     }
 
     async fn get_registered_user(&self, discord_user_id: u64) -> Result<Option<User>, AppError> {
@@ -1275,6 +1448,44 @@ async fn respond_component(
             CreateInteractionResponse::Message(
                 CreateInteractionResponseMessage::new()
                     .content(content.into())
+                    .ephemeral(ephemeral),
+            ),
+        )
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))
+}
+
+async fn respond_embed(
+    ctx: &Context,
+    command: &CommandInteraction,
+    ephemeral: bool,
+    embed: CreateEmbed,
+) -> Result<(), AppError> {
+    command
+        .create_response(
+            &ctx.http,
+            CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new()
+                    .add_embed(embed)
+                    .ephemeral(ephemeral),
+            ),
+        )
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))
+}
+
+async fn respond_component_embed(
+    ctx: &Context,
+    component: &ComponentInteraction,
+    ephemeral: bool,
+    embed: CreateEmbed,
+) -> Result<(), AppError> {
+    component
+        .create_response(
+            &ctx.http,
+            CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new()
+                    .add_embed(embed)
                     .ephemeral(ephemeral),
             ),
         )
@@ -1507,7 +1718,7 @@ fn update_disabled(button: CreateButton, disabled: bool) -> CreateButton {
 async fn update_component(
     ctx: &Context,
     component: &ComponentInteraction,
-    content: impl Into<String>,
+    embed: CreateEmbed,
     components: Vec<CreateActionRow>,
 ) -> Result<(), AppError> {
     component
@@ -1515,7 +1726,7 @@ async fn update_component(
             &ctx.http,
             CreateInteractionResponse::UpdateMessage(
                 CreateInteractionResponseMessage::new()
-                    .content(content.into())
+                    .embeds(vec![embed])
                     .components(components),
             ),
         )
