@@ -422,6 +422,7 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
     };
 
     let display_name = truncate(&preferred_display_name(&payload.presence.discord_user), 24);
+    let custom_status_header = custom_status_text(payload).map(|value| truncate(&value, 30));
 
     let activity_line = truncate(
         &primary_activity_line(payload, query.idle_message.as_deref()),
@@ -449,6 +450,16 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
     let escaped_activity = escape_html(&activity_line);
     let escaped_desc = escape_attr(&activity_line);
     let escaped_activity_name = escape_html(&activity_name.to_uppercase());
+    let custom_status_svg = custom_status_header
+        .as_ref()
+        .map(|value| {
+            format!(
+                r#"  <text x="86" y="78" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="500">{value}</text>"#,
+                muted = palette.muted,
+                value = escape_html(value),
+            )
+        })
+        .unwrap_or_default();
 
     let activity_label_y = 126;
     let activity_title_y = 146;
@@ -605,7 +616,7 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
 
   <text x="86" y="40" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">{display_name}</text>
   <text x="86" y="60" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="500">{username}</text>
-
+{custom_status_svg}
   <line x1="6" y1="95" x2="374" y2="95" stroke="{border}" stroke-width="1" />
 
 {activity_asset_markup}{activity_small_asset_markup}  <text x="{text_x}" y="{activity_label_y}" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.4px">{activity_name}</text>
@@ -633,6 +644,7 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
         muted = palette.muted,
         activity_asset_markup = activity_asset_markup,
         activity_small_asset_markup = activity_small_asset_markup,
+        custom_status_svg = custom_status_svg,
         text_x = text_x,
         activity_label_y = activity_label_y,
         activity_title_y = activity_title_y,

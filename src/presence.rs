@@ -25,9 +25,9 @@ impl PresenceService {
             cache
                 .entry(member.user.id.get().to_string())
                 .and_modify(|existing| {
-                    existing.discord_user = DiscordUserSummary::from_user(&member.user);
+                    existing.discord_user = DiscordUserSummary::from_member(member);
                 })
-                .or_insert_with(|| CachedPresence::offline_for_user(&member.user));
+                .or_insert_with(|| CachedPresence::offline_for_member(member));
         }
 
         for presence in guild.presences.values() {
@@ -44,7 +44,15 @@ impl PresenceService {
     }
 
     pub async fn upsert_member(&self, member: &Member) {
-        self.upsert_user(&member.user).await;
+        let mut cache = self.cache.write().await;
+        let key = member.user.id.get().to_string();
+
+        if let Some(existing) = cache.get_mut(&key) {
+            existing.discord_user = DiscordUserSummary::from_member(member);
+            return;
+        }
+
+        cache.insert(key, CachedPresence::offline_for_member(member));
     }
 
     pub async fn upsert_user(&self, user: &User) {
@@ -114,6 +122,21 @@ pub struct CachedPresence {
 
 #[allow(dead_code)]
 impl CachedPresence {
+    pub fn offline_for_member(member: &Member) -> Self {
+        Self {
+            active_on_discord_web: false,
+            active_on_discord_desktop: false,
+            active_on_discord_mobile: false,
+            discord_user: DiscordUserSummary::from_member(member),
+            discord_status: "offline".to_string(),
+            activities: Vec::new(),
+            listening_to_spotify: false,
+            spotify: None,
+            last_updated: Utc::now().timestamp_millis(),
+        }
+    }
+
+
     pub fn from_presence(presence: &Presence) -> Self {
         Self::from_presence_with_existing(presence, None, None)
     }
@@ -233,6 +256,16 @@ pub struct DiscordUserSummary {
 
 #[allow(dead_code)]
 impl DiscordUserSummary {
+    pub fn from_member(member: &Member) -> Self {
+        let mut summary = Self::from_user(&member.user);
+
+        if let Some(nick) = member.nick.as_deref().map(str::trim).filter(|value| !value.is_empty()) {
+            summary.display_name = nick.to_string();
+        }
+
+        summary
+    }
+
     pub fn from_user(user: &User) -> Self {
         Self {
             id: user.id.get().to_string(),
@@ -263,7 +296,23 @@ impl DiscordUserSummary {
         fallback: Option<&DiscordUserSummary>,
     ) -> Self {
         if let Some(full_user) = user.to_user() {
-            return Self::from_user(&full_user);
+            let mut summary = Self::from_user(&full_user);
+
+            if let Some(fallback) = fallback {
+                let fallback_display_name = fallback.display_name.trim();
+                let fallback_username = fallback.username.trim();
+                let fallback_global_name = fallback.global_name.as_deref().map(str::trim);
+                let looks_like_guild_nick = !fallback_display_name.is_empty()
+                    && fallback_display_name != fallback.id
+                    && fallback_display_name != fallback_username
+                    && fallback_global_name != Some(fallback_display_name);
+
+                if looks_like_guild_nick {
+                    summary.display_name = fallback_display_name.to_string();
+                }
+            }
+
+            return summary;
         }
 
         let id = user.id.get().to_string();
