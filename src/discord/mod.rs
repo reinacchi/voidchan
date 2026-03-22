@@ -1,11 +1,11 @@
-use std::sync::Arc;
+use std::{collections::BTreeMap, sync::Arc};
 
 use serenity::{
     all::{
         ButtonStyle, CommandDataOptionValue, CommandInteraction, CommandOptionType,
         ComponentInteraction, CreateActionRow, CreateButton, CreateCommand, CreateCommandOption,
-        CreateInteractionResponse, CreateInteractionResponseMessage, GatewayIntents, Guild, GuildId,
-        Interaction, Member, OnlineStatus, Permissions, Presence, Ready,
+        CreateInteractionResponse, CreateInteractionResponseMessage, GatewayIntents, Guild,
+        GuildId, Interaction, Member, OnlineStatus, Permissions, Presence, Ready,
         User as DiscordUser,
     },
     async_trait,
@@ -61,6 +61,7 @@ impl EventHandler for Handler {
             token_command(),
             profile_command(),
             files_command(),
+            kv_command(),
             admin_users_command(),
             admin_files_command(),
             blacklist_command(),
@@ -148,6 +149,7 @@ impl Handler {
             "token" => self.token(ctx, command).await,
             "profile" => self.profile(ctx, command).await,
             "files" => self.files(ctx, command).await,
+            "kv" => self.kv(ctx, command).await,
             "admin_users" => self.admin_users(ctx, command).await,
             "admin_files" => self.admin_files(ctx, command).await,
             "blacklist" => self.blacklist(ctx, command).await,
@@ -161,12 +163,13 @@ impl Handler {
         ctx: &Context,
         component: &ComponentInteraction,
     ) -> Result<(), AppError> {
-        if !is_admin(component.member.as_ref().and_then(|m| m.permissions)) {
-            respond_component(ctx, component, true, "Administrator permission required.").await?;
-            return Ok(());
-        }
-
         if let Some(file_id) = component.data.custom_id.strip_prefix("file_detail:") {
+            if !is_admin(component.member.as_ref().and_then(|m| m.permissions)) {
+                respond_component(ctx, component, true, "Administrator permission required.")
+                    .await?;
+                return Ok(());
+            }
+
             let row = sqlx::query(
                 r#"
                 SELECT f.id, f.original_name, f.mime_type, f.extension, f.size, f.uploader, f.created_at
@@ -216,6 +219,64 @@ Raw: {}/u/{}.{}",
                 extension,
             );
             respond_component(ctx, component, true, message).await?;
+            return Ok(());
+        }
+
+        if let Some((kind, owner_id, page)) = parse_owned_page_custom_id(&component.data.custom_id)
+        {
+            if component.user.id.get().to_string() != owner_id {
+                respond_component(
+                    ctx,
+                    component,
+                    true,
+                    "This paginator belongs to another user.",
+                )
+                .await?;
+                return Ok(());
+            }
+
+            match kind {
+                "files" => {
+                    let (content, components) = self
+                        .render_files_page_for_user(
+                            owner_id
+                                .parse::<u64>()
+                                .map_err(|_| AppError::BadRequest("Invalid paginator owner."))?,
+                            page,
+                        )
+                        .await?;
+                    update_component(ctx, component, content, components).await?;
+                    return Ok(());
+                }
+                "kv" => {
+                    let (content, components) = self
+                        .render_kv_page_for_user(
+                            owner_id
+                                .parse::<u64>()
+                                .map_err(|_| AppError::BadRequest("Invalid paginator owner."))?,
+                            page,
+                        )
+                        .await?;
+                    update_component(ctx, component, content, components).await?;
+                    return Ok(());
+                }
+                _ => {}
+            }
+        }
+
+        if let Some(page) = component.data.custom_id.strip_prefix("page:admin_files:") {
+            if !is_admin(component.member.as_ref().and_then(|m| m.permissions)) {
+                respond_component(ctx, component, true, "Administrator permission required.")
+                    .await?;
+                return Ok(());
+            }
+
+            let page = page
+                .parse::<u64>()
+                .map_err(|_| AppError::BadRequest("Invalid page."))?;
+            let (content, components) = self.render_admin_files_page(page).await?;
+            update_component(ctx, component, content, components).await?;
+            return Ok(());
         }
 
         Ok(())
@@ -414,14 +475,19 @@ Raw: {}/u/{}.{}",
                 .bind(user.id)
                 .fetch_one(&self.state.db)
                 .await?;
+        let total_kv_entries: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM user_presence_kv WHERE user_id = ?")
+                .bind(user.id)
+                .fetch_one(&self.state.db)
+                .await?;
 
         respond(
             ctx,
             command,
             true,
             format!(
-                "**Profile**\nUsername: `{}`\nPreferred URL mode: `/{}`\nPreferred hex colour: `{}`\nTotal files uploaded: `{}`",
-                user.username, user.preferred_url_mode, user.preferred_hex_colour, total_uploads
+                "**Profile**\nUsername: `{}`\nPreferred URL mode: `/{}`\nPreferred hex colour: `{}`\nTotal files uploaded: `{}`\nTotal KV entries: `{}`",
+                user.username, user.preferred_url_mode, user.preferred_hex_colour, total_uploads, total_kv_entries
             ),
         )
         .await?;
@@ -434,53 +500,271 @@ Raw: {}/u/{}.{}",
             return Ok(());
         };
 
-        let rows = sqlx::query(
-            r#"
-            SELECT id, original_name, extension, created_at
-            FROM files
-            WHERE uploader_id = ?
-            ORDER BY created_at DESC
-            LIMIT 20
-            "#,
-        )
-        .bind(user.id)
-        .fetch_all(&self.state.db)
-        .await?;
+        let (content, components) = self.render_files_page_for_user(user.id, 0).await?;
 
-        if rows.is_empty() {
-            respond(ctx, command, true, "You have not uploaded any files yet.").await?;
+        command
+            .create_response(
+                &ctx.http,
+                CreateInteractionResponse::Message(
+                    CreateInteractionResponseMessage::new()
+                        .content(content)
+                        .ephemeral(true)
+                        .components(components),
+                ),
+            )
+            .await
+            .map_err(|e| AppError::Internal(e.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn kv(&self, ctx: &Context, command: &CommandInteraction) -> Result<(), AppError> {
+        let Some(user) = self.get_registered_user(command.user.id.get()).await? else {
+            respond(ctx, command, true, "Register first with `/register`.").await?;
             return Ok(());
-        }
+        };
 
-        let mut lines = vec!["**Your uploaded files**".to_string()];
-        for row in rows {
-            let id: String = row.try_get("id").unwrap_or_default();
-            let name = row
-                .try_get::<Option<String>, _>("original_name")
-                .ok()
-                .flatten()
-                .unwrap_or_else(|| {
+        let Some(option) = command.data.options.first() else {
+            let (content, components) = self.render_kv_page_for_user(user.id, 0).await?;
+            command
+                .create_response(
+                    &ctx.http,
+                    CreateInteractionResponse::Message(
+                        CreateInteractionResponseMessage::new()
+                            .content(content)
+                            .ephemeral(true)
+                            .components(components),
+                    ),
+                )
+                .await
+                .map_err(|e| AppError::Internal(e.to_string()))?;
+            return Ok(());
+        };
+
+        match option.name.as_str() {
+            "set" => {
+                let mut key = None::<String>;
+                let mut value = None::<String>;
+
+                if let CommandDataOptionValue::SubCommand(sub_options) = &option.value {
+                    for sub_option in sub_options {
+                        match (sub_option.name.as_str(), &sub_option.value) {
+                            ("key", CommandDataOptionValue::String(v)) => key = Some(v.to_string()),
+                            ("value", CommandDataOptionValue::String(v)) => {
+                                value = Some(v.to_string())
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+
+                let Some(key) = key else {
+                    respond(ctx, command, true, "Missing `key`.").await?;
+                    return Ok(());
+                };
+
+                let Some(value) = value else {
+                    respond(ctx, command, true, "Missing `value`.").await?;
+                    return Ok(());
+                };
+
+                validate_kv_key(&key)?;
+                validate_kv_value(&value)?;
+                ensure_kv_capacity(&self.state, user.id, &[key.clone()]).await?;
+
+                sqlx::query(
+                    r#"
+                    INSERT INTO user_presence_kv (user_id, kv_key, kv_value)
+                    VALUES (?, ?, ?)
+                    ON DUPLICATE KEY UPDATE kv_value = VALUES(kv_value), updated_at = UTC_TIMESTAMP()
+                    "#,
+                )
+                .bind(user.id)
+                .bind(&key)
+                .bind(&value)
+                .execute(&self.state.db)
+                .await?;
+
+                respond(
+                    ctx,
+                    command,
+                    true,
                     format!(
-                        "{}.{}",
-                        id,
-                        row.try_get::<String, _>("extension").unwrap_or_default()
+                        "Stored KV entry `{key}` with {} character(s).",
+                        value.chars().count()
+                    ),
+                )
+                .await?;
+            }
+            "get" => {
+                let mut key = None::<String>;
+
+                if let CommandDataOptionValue::SubCommand(sub_options) = &option.value {
+                    for sub_option in sub_options {
+                        if let ("key", CommandDataOptionValue::String(v)) =
+                            (sub_option.name.as_str(), &sub_option.value)
+                        {
+                            key = Some(v.to_string());
+                        }
+                    }
+                }
+
+                if let Some(key) = key {
+                    validate_kv_key(&key)?;
+
+                    let row = sqlx::query(
+                        r#"
+                        SELECT kv_value
+                        FROM user_presence_kv
+                        WHERE user_id = ? AND kv_key = ?
+                        LIMIT 1
+                        "#,
                     )
-                });
-            let created = row
-                .try_get::<chrono::NaiveDateTime, _>("created_at")
-                .map(|v| v.to_string())
-                .unwrap_or_default();
-            let url = format!(
-                "{}/v/{}.{}",
-                self.state.config.base_url.trim_end_matches('/'),
-                id,
-                row.try_get::<String, _>("extension").unwrap_or_default()
-            );
-            lines.push(format!("• `{}` — {} — {}", id, name, url));
-            lines.push(format!("  Uploaded: {}", created));
+                    .bind(user.id)
+                    .bind(&key)
+                    .fetch_optional(&self.state.db)
+                    .await?;
+
+                    if let Some(row) = row {
+                        let value = row.try_get::<String, _>("kv_value").unwrap_or_default();
+                        respond(ctx, command, true, format!("`{key}` = ```\n{value}\n```")).await?;
+                    } else {
+                        respond(
+                            ctx,
+                            command,
+                            true,
+                            format!("No KV entry found for `{key}`."),
+                        )
+                        .await?;
+                    }
+                } else {
+                    let (content, components) = self.render_kv_page_for_user(user.id, 0).await?;
+                    command
+                        .create_response(
+                            &ctx.http,
+                            CreateInteractionResponse::Message(
+                                CreateInteractionResponseMessage::new()
+                                    .content(content)
+                                    .ephemeral(true)
+                                    .components(components),
+                            ),
+                        )
+                        .await
+                        .map_err(|e| AppError::Internal(e.to_string()))?;
+                }
+            }
+            "clear" => {
+                let result = sqlx::query("DELETE FROM user_presence_kv WHERE user_id = ?")
+                    .bind(user.id)
+                    .execute(&self.state.db)
+                    .await?;
+
+                respond(
+                    ctx,
+                    command,
+                    true,
+                    format!(
+                        "Cleared `{}` KV entr{}.",
+                        result.rows_affected(),
+                        if result.rows_affected() == 1 {
+                            "y"
+                        } else {
+                            "ies"
+                        }
+                    ),
+                )
+                .await?;
+            }
+            "export" => {
+                let rows = sqlx::query(
+                    r#"
+                    SELECT kv_key, kv_value
+                    FROM user_presence_kv
+                    WHERE user_id = ?
+                    ORDER BY kv_key ASC
+                    "#,
+                )
+                .bind(user.id)
+                .fetch_all(&self.state.db)
+                .await?;
+
+                if rows.is_empty() {
+                    respond(ctx, command, true, "You have no KV entries yet.").await?;
+                    return Ok(());
+                }
+
+                let mut payload = BTreeMap::new();
+                for row in rows {
+                    payload.insert(
+                        row.try_get::<String, _>("kv_key").unwrap_or_default(),
+                        row.try_get::<String, _>("kv_value").unwrap_or_default(),
+                    );
+                }
+
+                let json = serde_json::to_string_pretty(&payload).map_err(|e| {
+                    AppError::Internal(format!("Failed to serialize KV export: {e}"))
+                })?;
+                let wrapped = format!("```json\n{}\n```", json);
+
+                if wrapped.chars().count() > 1900 {
+                    respond(
+                        ctx,
+                        command,
+                        true,
+                        format!(
+                            "KV export is too large to fit in a Discord message ({} characters).",
+                            wrapped.chars().count()
+                        ),
+                    )
+                    .await?;
+                } else {
+                    respond(ctx, command, true, wrapped).await?;
+                }
+            }
+            "delete" => {
+                let mut key = None::<String>;
+
+                if let CommandDataOptionValue::SubCommand(sub_options) = &option.value {
+                    for sub_option in sub_options {
+                        if let ("key", CommandDataOptionValue::String(v)) =
+                            (sub_option.name.as_str(), &sub_option.value)
+                        {
+                            key = Some(v.to_string());
+                        }
+                    }
+                }
+
+                let Some(key) = key else {
+                    respond(ctx, command, true, "Missing `key`.").await?;
+                    return Ok(());
+                };
+
+                validate_kv_key(&key)?;
+
+                let result =
+                    sqlx::query("DELETE FROM user_presence_kv WHERE user_id = ? AND kv_key = ?")
+                        .bind(user.id)
+                        .bind(&key)
+                        .execute(&self.state.db)
+                        .await?;
+
+                if result.rows_affected() == 0 {
+                    respond(
+                        ctx,
+                        command,
+                        true,
+                        format!("No KV entry found for `{key}`."),
+                    )
+                    .await?;
+                } else {
+                    respond(ctx, command, true, format!("Deleted KV entry `{key}`.")).await?;
+                }
+            }
+            _ => {
+                respond(ctx, command, true, "Use `/kv get [key]`, `/kv set <key> <value>`, `/kv delete <key>`, `/kv clear`, or `/kv export`." ).await?;
+            }
         }
 
-        respond(ctx, command, true, lines.join("\n")).await?;
         Ok(())
     }
 
@@ -535,63 +819,16 @@ Raw: {}/u/{}.{}",
             return Ok(());
         }
 
-        let rows = sqlx::query(
-            r#"
-            SELECT id, original_name, extension, uploader
-            FROM files
-            ORDER BY created_at DESC
-            LIMIT 10
-            "#,
-        )
-        .fetch_all(&self.state.db)
-        .await?;
-
-        if rows.is_empty() {
-            respond(ctx, command, true, "No uploaded files found.").await?;
-            return Ok(());
-        }
-
-        let mut content = vec!["**Recent uploaded files**".to_string()];
-        let mut buttons: Vec<CreateButton> = Vec::new();
-        for row in rows {
-            let id: String = row.try_get("id").unwrap_or_default();
-            let label = row
-                .try_get::<Option<String>, _>("original_name")
-                .ok()
-                .flatten()
-                .unwrap_or_else(|| {
-                    format!(
-                        "{}.{}",
-                        id,
-                        row.try_get::<String, _>("extension").unwrap_or_default()
-                    )
-                });
-            content.push(format!(
-                "• `{}` — {} — uploader `{}`",
-                id,
-                label,
-                row.try_get::<String, _>("uploader").unwrap_or_default()
-            ));
-            buttons.push(
-                CreateButton::new(format!("file_detail:{id}"))
-                    .label(format!("Detail {id}"))
-                    .style(ButtonStyle::Primary),
-            );
-        }
-
-        let rows = chunk_buttons(buttons)
-            .into_iter()
-            .map(CreateActionRow::Buttons)
-            .collect::<Vec<_>>();
+        let (content, components) = self.render_admin_files_page(0).await?;
 
         command
             .create_response(
                 &ctx.http,
                 CreateInteractionResponse::Message(
                     CreateInteractionResponseMessage::new()
-                        .content(content.join("\n"))
+                        .content(content)
                         .ephemeral(true)
-                        .components(rows),
+                        .components(components),
                 ),
             )
             .await
@@ -699,6 +936,201 @@ Raw: {}/u/{}.{}",
         Ok(())
     }
 
+    async fn render_files_page_for_user(
+        &self,
+        user_id: u64,
+        page: u64,
+    ) -> Result<(String, Vec<CreateActionRow>), AppError> {
+        let total_files: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM files WHERE uploader_id = ?")
+                .bind(user_id)
+                .fetch_one(&self.state.db)
+                .await?;
+
+        let page_size = 10_u64;
+        let total_pages = total_pages(total_files, page_size);
+        if total_pages == 0 {
+            return Ok((
+                "You have not uploaded any files yet.".to_string(),
+                Vec::new(),
+            ));
+        }
+
+        let current_page = clamp_page(page, total_pages);
+        let offset = (current_page * page_size) as i64;
+        let rows = sqlx::query(
+            r#"
+            SELECT id, original_name, extension, created_at
+            FROM files
+            WHERE uploader_id = ?
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+            "#,
+        )
+        .bind(user_id)
+        .bind(page_size as i64)
+        .bind(offset)
+        .fetch_all(&self.state.db)
+        .await?;
+
+        let mut lines = vec![format!(
+            "**Your uploaded files** (page {}/{})",
+            current_page + 1,
+            total_pages
+        )];
+        for row in rows {
+            let id: String = row.try_get("id").unwrap_or_default();
+            let extension = row.try_get::<String, _>("extension").unwrap_or_default();
+            let name = row
+                .try_get::<Option<String>, _>("original_name")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| format!("{}.{}", id, extension));
+            let created = row
+                .try_get::<chrono::NaiveDateTime, _>("created_at")
+                .map(|v| v.to_string())
+                .unwrap_or_default();
+            let url = format!(
+                "{}/v/{}.{}",
+                self.state.config.base_url.trim_end_matches('/'),
+                id,
+                extension
+            );
+            lines.push(format!("• `{}` — {} — {}", id, name, url));
+            lines.push(format!("  Uploaded: {}", created));
+        }
+
+        Ok((
+            lines.join("\n"),
+            owned_pagination_components("files", user_id, current_page, total_pages),
+        ))
+    }
+
+    async fn render_kv_page_for_user(
+        &self,
+        user_id: u64,
+        page: u64,
+    ) -> Result<(String, Vec<CreateActionRow>), AppError> {
+        let total_rows: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM user_presence_kv WHERE user_id = ?")
+                .bind(user_id)
+                .fetch_one(&self.state.db)
+                .await?;
+
+        let page_size = 20_u64;
+        let total_pages = total_pages(total_rows, page_size);
+        if total_pages == 0 {
+            return Ok(("You have no KV entries yet.".to_string(), Vec::new()));
+        }
+
+        let current_page = clamp_page(page, total_pages);
+        let offset = (current_page * page_size) as i64;
+        let rows = sqlx::query(
+            r#"
+            SELECT kv_key
+            FROM user_presence_kv
+            WHERE user_id = ?
+            ORDER BY kv_key ASC
+            LIMIT ? OFFSET ?
+            "#,
+        )
+        .bind(user_id)
+        .bind(page_size as i64)
+        .bind(offset)
+        .fetch_all(&self.state.db)
+        .await?;
+
+        let mut lines = vec![format!(
+            "**Your KV keys** (page {}/{}, total {})",
+            current_page + 1,
+            total_pages,
+            total_rows
+        )];
+        for row in rows {
+            lines.push(format!(
+                "• `{}`",
+                row.try_get::<String, _>("kv_key").unwrap_or_default()
+            ));
+        }
+
+        Ok((
+            lines.join("\n"),
+            owned_pagination_components("kv", user_id, current_page, total_pages),
+        ))
+    }
+
+    async fn render_admin_files_page(
+        &self,
+        page: u64,
+    ) -> Result<(String, Vec<CreateActionRow>), AppError> {
+        let total_files: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM files")
+            .fetch_one(&self.state.db)
+            .await?;
+
+        let page_size = 10_u64;
+        let total_pages = total_pages(total_files, page_size);
+        if total_pages == 0 {
+            return Ok(("No uploaded files found.".to_string(), Vec::new()));
+        }
+
+        let current_page = clamp_page(page, total_pages);
+        let offset = (current_page * page_size) as i64;
+        let rows = sqlx::query(
+            r#"
+            SELECT id, original_name, extension, uploader
+            FROM files
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+            "#,
+        )
+        .bind(page_size as i64)
+        .bind(offset)
+        .fetch_all(&self.state.db)
+        .await?;
+
+        let mut content = vec![format!(
+            "**Recent uploaded files** (page {}/{})",
+            current_page + 1,
+            total_pages
+        )];
+        let mut buttons: Vec<CreateButton> = Vec::new();
+        for row in rows {
+            let id: String = row.try_get("id").unwrap_or_default();
+            let label = row
+                .try_get::<Option<String>, _>("original_name")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| {
+                    format!(
+                        "{}.{}",
+                        id,
+                        row.try_get::<String, _>("extension").unwrap_or_default()
+                    )
+                });
+            content.push(format!(
+                "• `{}` — {} — uploader `{}`",
+                id,
+                label,
+                row.try_get::<String, _>("uploader").unwrap_or_default()
+            ));
+            buttons.push(
+                CreateButton::new(format!("file_detail:{id}"))
+                    .label(format!("Detail {id}"))
+                    .style(ButtonStyle::Primary),
+            );
+        }
+
+        let mut components = chunk_buttons(buttons)
+            .into_iter()
+            .map(CreateActionRow::Buttons)
+            .collect::<Vec<_>>();
+        if let Some(nav) = admin_files_pagination_row(current_page, total_pages) {
+            components.push(nav);
+        }
+
+        Ok((content.join("\n"), components))
+    }
+
     async fn get_registered_user(&self, discord_user_id: u64) -> Result<Option<User>, AppError> {
         query_as::<_, User>(
             r#"
@@ -750,6 +1182,60 @@ Raw: {}/u/{}.{}",
 
         Ok(fallback)
     }
+}
+
+async fn ensure_kv_capacity(
+    state: &AppState,
+    user_id: u64,
+    candidate_keys: &[String],
+) -> Result<(), AppError> {
+    let existing_keys =
+        sqlx::query_as::<_, (String,)>("SELECT kv_key FROM user_presence_kv WHERE user_id = ?")
+            .bind(user_id)
+            .fetch_all(&state.db)
+            .await?;
+
+    let mut all_keys = existing_keys
+        .into_iter()
+        .map(|(key,)| key)
+        .collect::<std::collections::HashSet<_>>();
+
+    for key in candidate_keys {
+        all_keys.insert(key.clone());
+    }
+
+    if all_keys.len() > 512 {
+        return Err(AppError::BadRequest(
+            "KV stores are limited to 512 keys per user.",
+        ));
+    }
+
+    Ok(())
+}
+
+fn validate_kv_key(key: &str) -> Result<(), AppError> {
+    if key.is_empty()
+        || key.len() > 255
+        || !key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric())
+    {
+        return Err(AppError::BadRequest(
+            "KV keys must be alphanumeric and at most 255 characters long.",
+        ));
+    }
+
+    Ok(())
+}
+
+fn validate_kv_value(value: &str) -> Result<(), AppError> {
+    if value.chars().count() > 30_000 {
+        return Err(AppError::BadRequest(
+            "KV values may not exceed 30000 characters.",
+        ));
+    }
+
+    Ok(())
 }
 
 fn is_admin(permissions: Option<Permissions>) -> bool {
@@ -921,6 +1407,51 @@ fn files_command() -> CreateCommand {
         .dm_permission(false)
 }
 
+fn kv_command() -> CreateCommand {
+    CreateCommand::new("kv")
+        .description("Manage your presence KV entries")
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::SubCommand,
+                "get",
+                "Get a KV value or list all keys",
+            )
+            .add_sub_option(
+                CreateCommandOption::new(CommandOptionType::String, "key", "KV key")
+                    .required(false),
+            ),
+        )
+        .add_option(
+            CreateCommandOption::new(CommandOptionType::SubCommand, "set", "Set a KV value")
+                .add_sub_option(
+                    CreateCommandOption::new(CommandOptionType::String, "key", "KV key")
+                        .required(true),
+                )
+                .add_sub_option(
+                    CreateCommandOption::new(CommandOptionType::String, "value", "KV value")
+                        .required(true),
+                ),
+        )
+        .add_option(
+            CreateCommandOption::new(CommandOptionType::SubCommand, "delete", "Delete a KV value")
+                .add_sub_option(
+                    CreateCommandOption::new(CommandOptionType::String, "key", "KV key")
+                        .required(true),
+                ),
+        )
+        .add_option(CreateCommandOption::new(
+            CommandOptionType::SubCommand,
+            "clear",
+            "Delete all KV entries",
+        ))
+        .add_option(CreateCommandOption::new(
+            CommandOptionType::SubCommand,
+            "export",
+            "Export all KV entries as JSON",
+        ))
+        .dm_permission(false)
+}
+
 fn admin_users_command() -> CreateCommand {
     CreateCommand::new("admin_users")
         .description("Admin: list users")
@@ -967,4 +1498,108 @@ fn delete_file_command() -> CreateCommand {
         )
         .default_member_permissions(Permissions::ADMINISTRATOR)
         .dm_permission(false)
+}
+
+fn update_disabled(button: CreateButton, disabled: bool) -> CreateButton {
+    button.disabled(disabled)
+}
+
+async fn update_component(
+    ctx: &Context,
+    component: &ComponentInteraction,
+    content: impl Into<String>,
+    components: Vec<CreateActionRow>,
+) -> Result<(), AppError> {
+    component
+        .create_response(
+            &ctx.http,
+            CreateInteractionResponse::UpdateMessage(
+                CreateInteractionResponseMessage::new()
+                    .content(content.into())
+                    .components(components),
+            ),
+        )
+        .await
+        .map_err(|e| AppError::Internal(e.to_string()))
+}
+
+fn parse_owned_page_custom_id(custom_id: &str) -> Option<(&str, String, u64)> {
+    let mut parts = custom_id.split(':');
+    let prefix = parts.next()?;
+    let kind = parts.next()?;
+    let owner_id = parts.next()?.to_string();
+    let page = parts.next()?.parse::<u64>().ok()?;
+    if prefix != "page" || parts.next().is_some() {
+        return None;
+    }
+    Some((kind, owner_id, page))
+}
+
+fn clamp_page(page: u64, total_pages: u64) -> u64 {
+    if total_pages == 0 {
+        0
+    } else {
+        page.min(total_pages.saturating_sub(1))
+    }
+}
+
+fn total_pages(total_items: i64, page_size: u64) -> u64 {
+    if total_items <= 0 {
+        0
+    } else {
+        ((total_items as u64) + page_size - 1) / page_size
+    }
+}
+
+fn owned_pagination_components(
+    kind: &str,
+    user_id: u64,
+    current_page: u64,
+    total_pages: u64,
+) -> Vec<CreateActionRow> {
+    if total_pages <= 1 {
+        return Vec::new();
+    }
+
+    vec![CreateActionRow::Buttons(vec![
+        update_disabled(
+            CreateButton::new(format!(
+                "page:{kind}:{user_id}:{}",
+                current_page.saturating_sub(1)
+            ))
+            .label("Previous")
+            .style(ButtonStyle::Secondary),
+            current_page == 0,
+        ),
+        update_disabled(
+            CreateButton::new(format!("page:{kind}:{user_id}:{}", current_page + 1))
+                .label("Next")
+                .style(ButtonStyle::Secondary),
+            current_page + 1 >= total_pages,
+        ),
+    ])]
+}
+
+fn admin_files_pagination_row(current_page: u64, total_pages: u64) -> Option<CreateActionRow> {
+    if total_pages <= 1 {
+        return None;
+    }
+
+    Some(CreateActionRow::Buttons(vec![
+        update_disabled(
+            CreateButton::new(format!(
+                "page:admin_files:{}",
+                current_page.saturating_sub(1)
+            ))
+            .label("Previous")
+            .style(ButtonStyle::Secondary),
+            current_page == 0,
+        ),
+        update_disabled(
+            CreateButton::new(format!("page:admin_files:{}", current_page + 1))
+                .label("Next")
+                .style(ButtonStyle::Secondary),
+            current_page + 1 >= total_pages,
+        ),
+    ]))
 }
