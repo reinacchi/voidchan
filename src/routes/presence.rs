@@ -918,7 +918,7 @@ fn elapsed_activity_line(payload: &PresencePayload) -> Option<String> {
         if let Some(spotify) = payload.presence.spotify.as_ref() {
             if let Some(start) = spotify.timestamps.as_ref().and_then(|value| value.start) {
                 return Some(format!(
-                    "Elapsed {}",
+                    "{} elapsed",
                     format_elapsed_from_unix_millis(start as i64)
                 ));
             }
@@ -930,7 +930,7 @@ fn elapsed_activity_line(payload: &PresencePayload) -> Option<String> {
     if let Some(activity) = widget_discord_activity(payload) {
         if let Some(start) = activity.timestamps.as_ref().and_then(|value| value.start) {
             return Some(format!(
-                "Elapsed {}",
+                "{} elapsed",
                 format_elapsed_from_unix_millis(start as i64)
             ));
         }
