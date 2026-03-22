@@ -582,7 +582,7 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
     };
 
     format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" width="380" height="210" viewBox="0 0 380 210" role="img" aria-labelledby="title desc">
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="430" height="210" viewBox="0 0 430 210" role="img" aria-labelledby="title desc">
   <title id="title">Discord presence for {display_name}</title>
   <desc id="desc">{desc}</desc>
 
@@ -598,7 +598,7 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
     </clipPath>
   </defs>
 
-  <rect x="1" y="1" width="378" height="208" rx="14" fill="{background}" stroke="{border}" />
+  <rect x="1" y="1" width="428" height="208" rx="14" fill="{background}" stroke="{border}" />
 
   <rect x="18" y="18" width="54" height="54" rx="14" fill="{panel_soft}" stroke="{border}" />
   <image
@@ -617,7 +617,7 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
   <text x="86" y="40" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">{display_name}</text>
   <text x="86" y="60" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="500">{username}</text>
 {custom_status_svg}
-  <line x1="6" y1="95" x2="374" y2="95" stroke="{border}" stroke-width="1" />
+  <line x1="6" y1="95" x2="424" y2="95" stroke="{border}" stroke-width="1" />
 
 {activity_asset_markup}{activity_small_asset_markup}  <text x="{text_x}" y="{activity_label_y}" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.4px">{activity_name}</text>
   <text x="{text_x}" y="{activity_title_y}" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700">{activity}</text>
