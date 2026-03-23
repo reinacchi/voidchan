@@ -422,9 +422,14 @@ async fn build_widget_image_sources(payload: &PresencePayload) -> WidgetImageSou
         .discord_user
         .primary_guild
         .as_ref()
-        .and_then(primary_guild_badge_href);
+        .and_then(primary_guild_badge_url);
 
-    let (avatar_href, activity_asset_href, activity_small_asset_href, primary_guild_badge_href) = tokio::join!(
+    let (
+        avatar_href,
+        activity_asset_href,
+        activity_small_asset_href,
+        primary_guild_badge_href,
+    ) = tokio::join!(
         fetch_image_data_uri(&avatar_url),
         fetch_optional_image_data_uri(activity_asset_url.as_deref()),
         fetch_optional_image_data_uri(activity_small_asset_url.as_deref()),
@@ -563,7 +568,8 @@ fn render_widget_svg(
         .map(str::trim)
         .filter(|tag| !tag.is_empty())
         .map(|tag| truncate(tag, 6));
-    let primary_guild_badge_href = primary_guild.and_then(primary_guild_badge_href);
+    let primary_guild_badge_href = primary_guild
+        .and_then(|_| image_sources.primary_guild_badge_href.as_deref());
     let primary_guild_inline_width = primary_guild_tag
         .as_ref()
         .map(|tag| {
@@ -585,7 +591,6 @@ fn render_widget_svg(
         .as_ref()
         .map(|tag| {
             let badge_markup = primary_guild_badge_href
-                .as_deref()
                 .map(|url| {
                     format!(
                         r#"
@@ -1011,7 +1016,7 @@ fn activity_asset_image_url(activity: &ActivitySummary) -> Option<String> {
         })
 }
 
-fn primary_guild_badge_href(primary_guild: &PrimaryGuildSummary) -> Option<String> {
+fn primary_guild_badge_url(primary_guild: &PrimaryGuildSummary) -> Option<String> {
     let guild_id = non_empty(primary_guild.identity_guild_id.as_deref())?;
     let badge = non_empty(primary_guild.badge.as_deref())?;
 
