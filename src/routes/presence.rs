@@ -13,8 +13,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::FromRow;
 
+use crate::presence::PrimaryGuildSummary;
 use crate::{
     app_state::AppState,
+    badges::badges_from_public_flags,
     error::AppError,
     models::User,
     presence::{ActivitySummary, CachedPresence, DiscordUserSummary, spotify_image_url},
@@ -436,7 +438,11 @@ async fn fetch_optional_image_data_uri(url: Option<&str>) -> Option<String> {
 async fn fetch_image_data_uri(url: &str) -> Option<String> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(8))
-        .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!(
+            env!("CARGO_PKG_NAME"),
+            "/",
+            env!("CARGO_PKG_VERSION")
+        ))
         .build()
         .ok()?;
 
@@ -485,8 +491,11 @@ fn infer_image_mime_from_url(url: &str) -> Option<String> {
     }
 }
 
-fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery, image_sources: &WidgetImageSources) -> String {
-
+fn render_widget_svg(
+    payload: &PresencePayload,
+    query: &WidgetQuery,
+    image_sources: &WidgetImageSources,
+) -> String {
     let palette = palette(query.theme.as_deref());
     let background = query
         .accent
@@ -532,6 +541,95 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery, image_sourc
     let escaped_activity = escape_html(&activity_line);
     let escaped_desc = escape_attr(&activity_line);
     let escaped_activity_name = escape_html(&activity_name.to_uppercase());
+    let derived_badges = badges_from_public_flags(payload.presence.discord_user.public_flags);
+    let badge_size = 16;
+    let badge_gap = 4;
+    let badge_start_y = 48;
+    let badge_max_per_row = 8;
+    let inline_start_x = (86 + ((username.chars().count() as i32) * 7) + 8).min(312);
+
+    let primary_guild = payload.presence.discord_user.primary_guild.as_ref();
+    let primary_guild_tag = primary_guild
+        .and_then(|guild| guild.tag.as_deref())
+        .map(str::trim)
+        .filter(|tag| !tag.is_empty())
+        .map(|tag| truncate(tag, 6));
+    let primary_guild_badge_url = primary_guild.and_then(primary_guild_badge_url);
+    let primary_guild_inline_width = primary_guild_tag
+        .as_ref()
+        .map(|tag| {
+            let text_width = (tag.chars().count() as i32) * 8;
+            let badge_width = if primary_guild_badge_url.is_some() {
+                14
+            } else {
+                0
+            };
+            let gap = if primary_guild_badge_url.is_some() {
+                5
+            } else {
+                0
+            };
+            (text_width + badge_width + gap + 18).clamp(36, 82)
+        })
+        .unwrap_or(0);
+    let primary_guild_tag_svg = primary_guild_tag
+        .as_ref()
+        .map(|tag| {
+            let badge_markup = primary_guild_badge_url
+                .as_deref()
+                .map(|url| {
+                    format!(
+                        r#"
+  <image href="{href}" x="{badge_x}" y="48" width="14" height="14" aria-label="Server tag badge" />"#,
+                        href = escape_attr(url),
+                        badge_x = inline_start_x + 8,
+                    )
+                })
+                .unwrap_or_default();
+            let text_x = if primary_guild_badge_url.is_some() {
+                inline_start_x + 27
+            } else {
+                inline_start_x + 9
+            };
+            format!(
+                r#"  <rect x="{x}" y="46" width="{width}" height="18" rx="6" fill="{panel_soft}" stroke="{border}" />{badge_markup}
+  <text x="{text_x}" y="58.5" fill="{title}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700">{tag}</text>"#,
+                x = inline_start_x,
+                width = primary_guild_inline_width,
+                panel_soft = palette.panel_soft,
+                border = palette.border,
+                badge_markup = badge_markup,
+                text_x = text_x,
+                title = palette.title,
+                tag = escape_html(tag),
+            )
+        })
+        .unwrap_or_default();
+
+    let badge_start_x = if primary_guild_tag.is_some() {
+        (inline_start_x + primary_guild_inline_width + 8).min(336)
+    } else {
+        inline_start_x
+    };
+    let badges_svg = derived_badges
+        .iter()
+        .enumerate()
+        .map(|(index, badge)| {
+            let col = (index % badge_max_per_row) as i32;
+            let row = (index / badge_max_per_row) as i32;
+            let x = badge_start_x + col * (badge_size + badge_gap);
+            let y = badge_start_y + row * (badge_size + badge_gap);
+            format!(
+                r#"  <image href="{href}" x="{x}" y="{y}" width="{size}" height="{size}" aria-label="{label}" />"#,
+                href = escape_attr(&badge.icon_url),
+                x = x,
+                y = y,
+                size = badge_size,
+                label = escape_attr(badge.label),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
     let custom_status_svg = custom_status_header
         .as_ref()
         .map(|value| {
@@ -700,6 +798,8 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery, image_sourc
 
   <text x="86" y="40" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">{display_name}</text>
   <text x="86" y="60" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="500">{username}</text>
+{badges_svg}
+{primary_guild_tag_svg}
 {custom_status_svg}
   <line x1="6" y1="95" x2="424" y2="95" stroke="{border}" stroke-width="1" />
 
@@ -728,7 +828,9 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery, image_sourc
         muted = palette.muted,
         activity_asset_markup = activity_asset_markup,
         activity_small_asset_markup = activity_small_asset_markup,
+        badges_svg = badges_svg,
         custom_status_svg = custom_status_svg,
+        primary_guild_tag_svg = primary_guild_tag_svg,
         text_x = text_x,
         activity_label_y = activity_label_y,
         activity_title_y = activity_title_y,
@@ -817,10 +919,6 @@ fn primary_activity_line(payload: &PresencePayload, idle_message: Option<&str>) 
         return format_primary_activity(activity);
     }
 
-    if let Some(custom) = custom_status_text(payload) {
-        return custom;
-    }
-
     idle_message
         .unwrap_or("No current Discord activity")
         .to_string()
@@ -852,18 +950,7 @@ fn secondary_activity_lines(payload: &PresencePayload, status_line: &str) -> Vec
             return context;
         }
 
-        if let Some(custom) = custom_status_text(payload) {
-            return vec![custom];
-        }
-
-        return vec![
-            pretty_activity_kind(&activity.kind).to_string(),
-            activity.name.clone(),
-        ];
-    }
-
-    if let Some(custom) = custom_status_text(payload) {
-        return vec![custom];
+        return Vec::new();
     }
 
     if payload.kv.is_empty() {
@@ -913,6 +1000,15 @@ fn activity_asset_image_url(activity: &ActivitySummary) -> Option<String> {
                 application_id, large_image
             )
         })
+}
+
+fn primary_guild_badge_url(primary_guild: &PrimaryGuildSummary) -> Option<String> {
+    let guild_id = non_empty(primary_guild.identity_guild_id.as_deref())?;
+    let badge = non_empty(primary_guild.badge.as_deref())?;
+
+    Some(format!(
+        "https://cdn.discordapp.com/guild-tag-badges/{guild_id}/{badge}.png"
+    ))
 }
 
 fn activity_small_asset_image_url(activity: &ActivitySummary) -> Option<String> {

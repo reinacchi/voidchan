@@ -1,4 +1,5 @@
 mod app_state;
+mod badges;
 mod config;
 mod discord;
 mod error;

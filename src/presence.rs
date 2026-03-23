@@ -4,7 +4,7 @@ use chrono::Utc;
 use serde::Serialize;
 use serenity::all::{
     Activity, ActivityAssets, ActivityEmoji, ActivityTimestamps, ActivityType, Guild, Member,
-    OnlineStatus, Presence, PresenceUser, User,
+    OnlineStatus, Presence, PresenceUser, PrimaryGuild, User,
 };
 use tokio::sync::RwLock;
 
@@ -253,6 +253,22 @@ pub struct DiscordUserSummary {
     pub avatar: Option<String>,
     pub avatar_url: String,
     pub bot: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_flags: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary_guild: Option<PrimaryGuildSummary>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct PrimaryGuildSummary {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub badge: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub identity_enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub identity_guild_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -294,6 +310,11 @@ impl DiscordUserSummary {
                 .avatar_url()
                 .unwrap_or_else(|| user.default_avatar_url()),
             bot: user.bot,
+            public_flags: user.public_flags.map(|flags| flags.bits()),
+            primary_guild: user
+                .primary_guild
+                .as_ref()
+                .map(PrimaryGuildSummary::from_primary_guild),
         };
 
         summary.apply_fallback(fallback);
@@ -348,6 +369,8 @@ impl DiscordUserSummary {
         let bot = user
             .bot
             .unwrap_or_else(|| fallback.map(|value| value.bot).unwrap_or(false));
+        let public_flags = fallback.and_then(|value| value.public_flags);
+        let primary_guild = fallback.and_then(|value| value.primary_guild.clone());
 
         let mut summary = Self {
             id,
@@ -358,6 +381,8 @@ impl DiscordUserSummary {
             avatar,
             avatar_url,
             bot,
+            public_flags,
+            primary_guild,
         };
 
         summary.apply_fallback(fallback);
@@ -390,6 +415,14 @@ impl DiscordUserSummary {
             self.avatar_url = fallback.avatar_url.clone();
         }
 
+        if self.public_flags.is_none() {
+            self.public_flags = fallback.public_flags;
+        }
+
+        if self.primary_guild.is_none() {
+            self.primary_guild = fallback.primary_guild.clone();
+        }
+
         let fallback_display_name = fallback.display_name.trim();
         let has_better_fallback_display_name = !fallback_display_name.is_empty()
             && fallback_display_name != fallback.id
@@ -420,6 +453,22 @@ impl DiscordUserSummary {
             avatar: None,
             avatar_url: default_avatar_url(discord_user_id, None),
             bot: false,
+            public_flags: None,
+            primary_guild: None,
+        }
+    }
+}
+
+impl PrimaryGuildSummary {
+    fn from_primary_guild(primary_guild: &PrimaryGuild) -> Self {
+        Self {
+            badge: primary_guild.badge.as_ref().map(ToString::to_string),
+            identity_enabled: primary_guild.identity_enabled,
+            identity_guild_id: primary_guild
+                .identity_guild_id
+                .as_ref()
+                .map(|id| id.get().to_string()),
+            tag: primary_guild.tag.clone(),
         }
     }
 }
