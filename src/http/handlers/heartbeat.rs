@@ -3,7 +3,7 @@ use std::time::Instant;
 use axum::{Json, extract::State, http::StatusCode};
 use serde::Serialize;
 
-use crate::{app_state::AppState, error::AppError};
+use crate::{app::state::AppState, app::error::AppError};
 
 #[derive(Serialize)]
 pub struct HeartbeatResponse {

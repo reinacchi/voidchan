@@ -8,9 +8,9 @@ use chrono::Utc;
 use sqlx::query_as;
 
 use crate::{
-    app_state::AppState,
-    error::AppError,
-    models::{UploadResponse, User},
+    app::state::AppState,
+    app::error::AppError,
+    domain::models::{UploadResponse, User},
     utils::ids::generate_id,
     utils::mime_ext::extension_from_mime,
 };

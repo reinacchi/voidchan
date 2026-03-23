@@ -2,7 +2,7 @@
 
 <p align="center"><img src="assets/voidchan.png" alt="VoidChan Logo" width="200"/></p>
 
-**VoidChan** is a multi-purpose service written in Rust. It offers features such as uploading and sharing files with ease using [ShareX](https://github.com/sharex/sharex), integrates with Discord for account management, and includes a customisable Discord presence feature to showcase your activity.
+**VoidChan** is a multi-purpose service written in Rust. It offers features such as uploading and sharing files with ease using [ShareX](https://github.com/sharex/sharex), integrates with Discord for account management, and includes a customisable Discord presence feature inspired by [Lanyard](https://github.com/Phineas/lanyard) to showcase your activity.
 
 ## Table of Contents
 
