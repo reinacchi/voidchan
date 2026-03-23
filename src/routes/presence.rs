@@ -50,6 +50,12 @@ pub struct WidgetQuery {
     pub theme: Option<String>,
     pub accent: Option<String>,
     pub idle_message: Option<String>,
+    pub hide_status: Option<bool>,
+    pub hide_elapsed_time: Option<bool>,
+    pub hide_server_tag: Option<bool>,
+    pub hide_badges: Option<bool>,
+    pub hide_activity: Option<bool>,
+    pub hide_spotify: Option<bool>,
 }
 
 pub async fn get_presence(
@@ -180,7 +186,7 @@ pub async fn presence_widget_svg(
     Query(query): Query<WidgetQuery>,
 ) -> Result<(StatusCode, HeaderMap, String), AppError> {
     let payload = load_presence_payload(&state, &discord_user_id).await?;
-    let image_sources = build_widget_image_sources(&payload).await;
+    let image_sources = build_widget_image_sources(&payload, &query).await;
     let svg = render_widget_svg(&payload, &query, &image_sources);
 
     Ok(svg_response(svg))
@@ -413,10 +419,22 @@ struct WidgetImageSources {
     primary_guild_badge_href: Option<String>,
 }
 
-async fn build_widget_image_sources(payload: &PresencePayload) -> WidgetImageSources {
+async fn build_widget_image_sources(
+    payload: &PresencePayload,
+    query: &WidgetQuery,
+) -> WidgetImageSources {
     let avatar_url = discord_avatar_url(&payload.presence.discord_user);
-    let activity_asset_url = widget_activity_asset_url(payload);
-    let activity_small_asset_url = widget_activity_small_asset_url(payload);
+    let show_spotify = !query.hide_spotify.unwrap_or(false);
+    let activity_asset_url = if query.hide_activity.unwrap_or(false) {
+        None
+    } else {
+        widget_activity_asset_url(payload, show_spotify)
+    };
+    let activity_small_asset_url = if query.hide_activity.unwrap_or(false) {
+        None
+    } else {
+        widget_activity_small_asset_url(payload, show_spotify)
+    };
     let primary_guild_badge_url = payload
         .presence
         .discord_user
@@ -424,12 +442,7 @@ async fn build_widget_image_sources(payload: &PresencePayload) -> WidgetImageSou
         .as_ref()
         .and_then(primary_guild_badge_url);
 
-    let (
-        avatar_href,
-        activity_asset_href,
-        activity_small_asset_href,
-        primary_guild_badge_href,
-    ) = tokio::join!(
+    let (avatar_href, activity_asset_href, activity_small_asset_href, primary_guild_badge_href) = tokio::join!(
         fetch_image_data_uri(&avatar_url),
         fetch_optional_image_data_uri(activity_asset_url.as_deref()),
         fetch_optional_image_data_uri(activity_small_asset_url.as_deref()),
@@ -510,6 +523,12 @@ fn render_widget_svg(
     query: &WidgetQuery,
     image_sources: &WidgetImageSources,
 ) -> String {
+    let hide_status = query.hide_status.unwrap_or(false);
+    let hide_elapsed_time = query.hide_elapsed_time.unwrap_or(false);
+    let hide_server_tag = query.hide_server_tag.unwrap_or(false);
+    let hide_badges = query.hide_badges.unwrap_or(false);
+    let hide_activity = query.hide_activity.unwrap_or(false);
+    let show_spotify = !query.hide_spotify.unwrap_or(false);
     let palette = palette(query.theme.as_deref());
     let background = query
         .accent
@@ -531,45 +550,76 @@ fn render_widget_svg(
     };
 
     let display_name = truncate(&preferred_display_name(&payload.presence.discord_user), 24);
-    let custom_status_header = custom_status_text(payload).map(|value| truncate(&value, 30));
+    let title_text = display_name.clone();
+    let username_subtitle = Some(username.clone());
+    let custom_status_header = if hide_status {
+        None
+    } else {
+        custom_status_text(payload).map(|value| truncate(&value, 30))
+    };
 
-    let activity_line = truncate(
-        &primary_activity_line(payload, query.idle_message.as_deref()),
-        28,
-    );
+    let activity_line = if hide_activity {
+        String::new()
+    } else {
+        truncate(
+            &primary_activity_line(payload, query.idle_message.as_deref(), show_spotify),
+            28,
+        )
+    };
 
-    let secondary_lines = secondary_activity_lines(payload, "")
-        .into_iter()
-        .map(|line| truncate(&line, 30))
-        .collect::<Vec<_>>();
+    let secondary_lines = if hide_activity {
+        Vec::new()
+    } else {
+        secondary_activity_lines(payload, "", show_spotify)
+            .into_iter()
+            .map(|line| truncate(&line, 30))
+            .collect::<Vec<_>>()
+    };
 
-    let elapsed_line = elapsed_activity_line(payload)
-        .map(|value| truncate(&value, 34))
-        .unwrap_or_default();
+    let elapsed_line = if hide_activity || hide_elapsed_time {
+        String::new()
+    } else {
+        elapsed_activity_line(payload, show_spotify)
+            .map(|value| truncate(&value, 34))
+            .unwrap_or_default()
+    };
 
-    let activity_name = truncate(&widget_activity_name(payload), 24);
+    let activity_name = if hide_activity {
+        String::new()
+    } else {
+        truncate(&widget_activity_name(payload, show_spotify), 24)
+    };
 
     let escaped_avatar_url = escape_attr(&image_sources.avatar_href);
-    let escaped_username = escape_html(&username);
-    let escaped_display_name = escape_html(&display_name);
+    let escaped_username = escape_html(username_subtitle.as_deref().unwrap_or(""));
+    let escaped_display_name = escape_html(&title_text);
     let escaped_activity = escape_html(&activity_line);
     let escaped_desc = escape_attr(&activity_line);
     let escaped_activity_name = escape_html(&activity_name.to_uppercase());
-    let derived_badges = badges_from_public_flags(payload.presence.discord_user.public_flags);
+    let derived_badges = if hide_badges {
+        Vec::new()
+    } else {
+        badges_from_public_flags(payload.presence.discord_user.public_flags)
+    };
     let badge_size = 16;
     let badge_gap = 4;
     let badge_start_y = 48;
     let badge_max_per_row = 8;
-    let inline_start_x = (86 + ((username.chars().count() as i32) * 7) + 8).min(312);
+    let username_line_width = approximate_text_width(&username, 12.5);
+    let inline_start_x = (86 + username_line_width).min(312);
 
     let primary_guild = payload.presence.discord_user.primary_guild.as_ref();
-    let primary_guild_tag = primary_guild
-        .and_then(|guild| guild.tag.as_deref())
-        .map(str::trim)
-        .filter(|tag| !tag.is_empty())
-        .map(|tag| truncate(tag, 6));
-    let primary_guild_badge_href = primary_guild
-        .and_then(|_| image_sources.primary_guild_badge_href.as_deref());
+    let primary_guild_tag = if hide_server_tag {
+        None
+    } else {
+        primary_guild
+            .and_then(|guild| guild.tag.as_deref())
+            .map(str::trim)
+            .filter(|tag| !tag.is_empty())
+            .map(|tag| truncate(tag, 6))
+    };
+    let primary_guild_badge_href =
+        primary_guild.and_then(|_| image_sources.primary_guild_badge_href.as_deref());
     let primary_guild_inline_width = primary_guild_tag
         .as_ref()
         .map(|tag| {
@@ -777,6 +827,54 @@ fn render_widget_svg(
         String::new()
     };
 
+    let status_svg = if hide_status {
+        String::new()
+    } else {
+        format!(
+            r#"  <circle cx="64" cy="64" r="9" fill="{background}" />
+  <circle cx="64" cy="64" r="6" fill="{status_accent}" stroke="{panel}" stroke-width="1.5" />"#,
+            background = background,
+            status_accent = status_accent,
+            panel = palette.panel,
+        )
+    };
+
+    let username_svg = username_subtitle
+        .as_ref()
+        .map(|_| {
+            format!(
+                r#"  <text x="86" y="60" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="500">{username}</text>"#,
+                muted = palette.muted,
+                username = escaped_username,
+            )
+        })
+        .unwrap_or_default();
+
+    let activity_section_svg = if hide_activity {
+        String::new()
+    } else {
+        format!(
+            r#"  <line x1="6" y1="95" x2="424" y2="95" stroke="{border}" stroke-width="1" />
+
+{activity_asset_markup}{activity_small_asset_markup}  <text x="{text_x}" y="{activity_label_y}" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.4px">{activity_name}</text>
+  <text x="{text_x}" y="{activity_title_y}" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700">{activity}</text>
+{secondary_svg}
+{elapsed_svg}"#,
+            border = palette.border,
+            activity_asset_markup = activity_asset_markup,
+            activity_small_asset_markup = activity_small_asset_markup,
+            text_x = text_x,
+            activity_label_y = activity_label_y,
+            muted = palette.muted,
+            activity_name = escaped_activity_name,
+            activity_title_y = activity_title_y,
+            title_color = palette.title,
+            activity = escaped_activity,
+            secondary_svg = secondary_svg,
+            elapsed_svg = elapsed_svg,
+        )
+    };
+
     format!(
         r#"<svg xmlns="http://www.w3.org/2000/svg" width="430" height="210" viewBox="0 0 430 210" role="img" aria-labelledby="title desc">
   <title id="title">Discord presence for {display_name}</title>
@@ -807,20 +905,14 @@ fn render_widget_svg(
     clip-path="url(#avatarClip)"
   />
 
-  <circle cx="64" cy="64" r="9" fill="{background}" />
-  <circle cx="64" cy="64" r="6" fill="{status_accent}" stroke="{panel}" stroke-width="1.5" />
+{status_svg}
 
   <text x="86" y="40" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">{display_name}</text>
-  <text x="86" y="60" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="500">{username}</text>
+{username_svg}
 {badges_svg}
 {primary_guild_tag_svg}
 {custom_status_svg}
-  <line x1="6" y1="95" x2="424" y2="95" stroke="{border}" stroke-width="1" />
-
-{activity_asset_markup}{activity_small_asset_markup}  <text x="{text_x}" y="{activity_label_y}" fill="{muted}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.4px">{activity_name}</text>
-  <text x="{text_x}" y="{activity_title_y}" fill="{title_color}" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700">{activity}</text>
-{secondary_svg}
-{elapsed_svg}
+{activity_section_svg}
 </svg>"#,
         display_name = escaped_display_name,
         desc = escaped_desc,
@@ -834,24 +926,14 @@ fn render_widget_svg(
         small_asset_radius = small_asset_radius,
         background = background,
         border = palette.border,
-        panel = palette.panel,
         avatar_url = escaped_avatar_url,
-        status_accent = status_accent,
-        username = escaped_username,
         title_color = palette.title,
-        muted = palette.muted,
-        activity_asset_markup = activity_asset_markup,
-        activity_small_asset_markup = activity_small_asset_markup,
         badges_svg = badges_svg,
         custom_status_svg = custom_status_svg,
         primary_guild_tag_svg = primary_guild_tag_svg,
-        text_x = text_x,
-        activity_label_y = activity_label_y,
-        activity_title_y = activity_title_y,
-        activity_name = escaped_activity_name,
-        activity = escaped_activity,
-        secondary_svg = secondary_svg,
-        elapsed_svg = elapsed_svg,
+        status_svg = status_svg,
+        username_svg = username_svg,
+        activity_section_svg = activity_section_svg,
         panel_soft = palette.panel_soft,
     )
 }
@@ -877,8 +959,8 @@ fn discord_avatar_url(user: &DiscordUserSummary) -> String {
     )
 }
 
-fn widget_uses_spotify(payload: &PresencePayload) -> bool {
-    payload.presence.spotify.is_some()
+fn widget_uses_spotify(payload: &PresencePayload, show_spotify: bool) -> bool {
+    show_spotify && payload.presence.spotify.is_some()
 }
 
 fn widget_spotify_activity(payload: &PresencePayload) -> Option<&ActivitySummary> {
@@ -895,8 +977,8 @@ fn widget_discord_activity(payload: &PresencePayload) -> Option<&ActivitySummary
     })
 }
 
-fn widget_activity_name(payload: &PresencePayload) -> String {
-    if widget_uses_spotify(payload) {
+fn widget_activity_name(payload: &PresencePayload, show_spotify: bool) -> String {
+    if widget_uses_spotify(payload, show_spotify) {
         return "Spotify".to_string();
     }
 
@@ -906,24 +988,31 @@ fn widget_activity_name(payload: &PresencePayload) -> String {
         .to_string()
 }
 
-fn widget_activity_asset_url(payload: &PresencePayload) -> Option<String> {
-    if widget_uses_spotify(payload) {
+fn widget_activity_asset_url(payload: &PresencePayload, show_spotify: bool) -> Option<String> {
+    if widget_uses_spotify(payload, show_spotify) {
         return widget_spotify_activity(payload).and_then(activity_asset_image_url);
     }
 
     widget_discord_activity(payload).and_then(activity_asset_image_url)
 }
 
-fn widget_activity_small_asset_url(payload: &PresencePayload) -> Option<String> {
-    if widget_uses_spotify(payload) {
+fn widget_activity_small_asset_url(
+    payload: &PresencePayload,
+    show_spotify: bool,
+) -> Option<String> {
+    if widget_uses_spotify(payload, show_spotify) {
         return widget_spotify_activity(payload).and_then(activity_small_asset_image_url);
     }
 
     widget_discord_activity(payload).and_then(activity_small_asset_image_url)
 }
 
-fn primary_activity_line(payload: &PresencePayload, idle_message: Option<&str>) -> String {
-    if widget_uses_spotify(payload) {
+fn primary_activity_line(
+    payload: &PresencePayload,
+    idle_message: Option<&str>,
+    show_spotify: bool,
+) -> String {
+    if widget_uses_spotify(payload, show_spotify) {
         if let Some(spotify) = payload.presence.spotify.as_ref() {
             return format!("Listening to {}", spotify.song);
         }
@@ -938,8 +1027,12 @@ fn primary_activity_line(payload: &PresencePayload, idle_message: Option<&str>) 
         .to_string()
 }
 
-fn secondary_activity_lines(payload: &PresencePayload, status_line: &str) -> Vec<String> {
-    if widget_uses_spotify(payload) {
+fn secondary_activity_lines(
+    payload: &PresencePayload,
+    status_line: &str,
+    show_spotify: bool,
+) -> Vec<String> {
+    if widget_uses_spotify(payload, show_spotify) {
         if let Some(spotify) = payload.presence.spotify.as_ref() {
             let mut lines = Vec::new();
 
@@ -1107,8 +1200,8 @@ fn activity_context_lines(activity: &ActivitySummary) -> Option<Vec<String>> {
     }
 }
 
-fn elapsed_activity_line(payload: &PresencePayload) -> Option<String> {
-    if widget_uses_spotify(payload) {
+fn elapsed_activity_line(payload: &PresencePayload, show_spotify: bool) -> Option<String> {
+    if widget_uses_spotify(payload, show_spotify) {
         if let Some(spotify) = payload.presence.spotify.as_ref() {
             if let Some(start) = spotify.timestamps.as_ref().and_then(|value| value.start) {
                 return Some(format!(
@@ -1177,6 +1270,22 @@ fn pretty_activity_kind(kind: &str) -> &'static str {
         "custom" => "Custom status",
         _ => "Activity",
     }
+}
+
+fn approximate_text_width(value: &str, font_size: f32) -> i32 {
+    let units = value.chars().fold(0.0_f32, |acc, ch| {
+        let width = match ch {
+            'i' | 'l' | 'I' | '1' | '|' | '.' | ',' | '\'' => 0.32,
+            ' ' => 0.35,
+            'm' | 'w' | 'M' | 'W' | '@' | '#' | '%' | '&' | 'Q' | 'O' | '0' => 0.82,
+            _ if ch.is_uppercase() => 0.7,
+            _ if !ch.is_ascii() => 0.95,
+            _ => 0.6,
+        };
+        acc + width
+    });
+
+    (units * font_size).ceil() as i32
 }
 
 fn truncate(value: &str, max_chars: usize) -> String {
