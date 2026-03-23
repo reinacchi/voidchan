@@ -410,23 +410,32 @@ struct WidgetImageSources {
     avatar_href: String,
     activity_asset_href: Option<String>,
     activity_small_asset_href: Option<String>,
+    primary_guild_badge_href: Option<String>,
 }
 
 async fn build_widget_image_sources(payload: &PresencePayload) -> WidgetImageSources {
     let avatar_url = discord_avatar_url(&payload.presence.discord_user);
     let activity_asset_url = widget_activity_asset_url(payload);
     let activity_small_asset_url = widget_activity_small_asset_url(payload);
+    let primary_guild_badge_url = payload
+        .presence
+        .discord_user
+        .primary_guild
+        .as_ref()
+        .and_then(primary_guild_badge_href);
 
-    let (avatar_href, activity_asset_href, activity_small_asset_href) = tokio::join!(
+    let (avatar_href, activity_asset_href, activity_small_asset_href, primary_guild_badge_href) = tokio::join!(
         fetch_image_data_uri(&avatar_url),
         fetch_optional_image_data_uri(activity_asset_url.as_deref()),
         fetch_optional_image_data_uri(activity_small_asset_url.as_deref()),
+        fetch_optional_image_data_uri(primary_guild_badge_url.as_deref()),
     );
 
     WidgetImageSources {
         avatar_href: avatar_href.unwrap_or(avatar_url),
         activity_asset_href: activity_asset_href.or(activity_asset_url),
         activity_small_asset_href: activity_small_asset_href.or(activity_small_asset_url),
+        primary_guild_badge_href: primary_guild_badge_href.or(primary_guild_badge_url),
     }
 }
 
@@ -554,17 +563,17 @@ fn render_widget_svg(
         .map(str::trim)
         .filter(|tag| !tag.is_empty())
         .map(|tag| truncate(tag, 6));
-    let primary_guild_badge_url = primary_guild.and_then(primary_guild_badge_url);
+    let primary_guild_badge_href = primary_guild.and_then(primary_guild_badge_href);
     let primary_guild_inline_width = primary_guild_tag
         .as_ref()
         .map(|tag| {
             let text_width = (tag.chars().count() as i32) * 8;
-            let badge_width = if primary_guild_badge_url.is_some() {
+            let badge_width = if primary_guild_badge_href.is_some() {
                 14
             } else {
                 0
             };
-            let gap = if primary_guild_badge_url.is_some() {
+            let gap = if primary_guild_badge_href.is_some() {
                 5
             } else {
                 0
@@ -575,7 +584,7 @@ fn render_widget_svg(
     let primary_guild_tag_svg = primary_guild_tag
         .as_ref()
         .map(|tag| {
-            let badge_markup = primary_guild_badge_url
+            let badge_markup = primary_guild_badge_href
                 .as_deref()
                 .map(|url| {
                     format!(
@@ -586,7 +595,7 @@ fn render_widget_svg(
                     )
                 })
                 .unwrap_or_default();
-            let text_x = if primary_guild_badge_url.is_some() {
+            let text_x = if primary_guild_badge_href.is_some() {
                 inline_start_x + 27
             } else {
                 inline_start_x + 9
@@ -1002,7 +1011,7 @@ fn activity_asset_image_url(activity: &ActivitySummary) -> Option<String> {
         })
 }
 
-fn primary_guild_badge_url(primary_guild: &PrimaryGuildSummary) -> Option<String> {
+fn primary_guild_badge_href(primary_guild: &PrimaryGuildSummary) -> Option<String> {
     let guild_id = non_empty(primary_guild.identity_guild_id.as_deref())?;
     let badge = non_empty(primary_guild.badge.as_deref())?;
 
