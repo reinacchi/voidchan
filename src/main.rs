@@ -73,13 +73,6 @@ async fn main() {
         .await
         .expect("failed to connect to MySQL");
 
-    tracing::info!("Running database migrations...");
-    sqlx::migrate!("./migrations")
-        .run(&db)
-        .await
-        .expect("failed to run database migrations");
-    tracing::info!("Database migrations complete");
-
     let credentials = Credentials::new(
         config.r2_access_key_id.clone(),
         config.r2_secret_access_key.clone(),
