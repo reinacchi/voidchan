@@ -60,7 +60,9 @@ impl PresenceService {
         let key = user.id.get().to_string();
 
         if let Some(existing) = cache.get_mut(&key) {
-            existing.discord_user = DiscordUserSummary::from_user(user);
+            let fallback = existing.discord_user.clone();
+            existing.discord_user =
+                DiscordUserSummary::from_user_with_fallback(user, Some(&fallback));
             return;
         }
 
@@ -135,7 +137,6 @@ impl CachedPresence {
             last_updated: Utc::now().timestamp_millis(),
         }
     }
-
 
     pub fn from_presence(presence: &Presence) -> Self {
         Self::from_presence_with_existing(presence, None, None)
@@ -259,7 +260,12 @@ impl DiscordUserSummary {
     pub fn from_member(member: &Member) -> Self {
         let mut summary = Self::from_user(&member.user);
 
-        if let Some(nick) = member.nick.as_deref().map(str::trim).filter(|value| !value.is_empty()) {
+        if let Some(nick) = member
+            .nick
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+        {
             summary.display_name = nick.to_string();
         }
 
@@ -267,7 +273,11 @@ impl DiscordUserSummary {
     }
 
     pub fn from_user(user: &User) -> Self {
-        Self {
+        Self::from_user_with_fallback(user, None)
+    }
+
+    pub fn from_user_with_fallback(user: &User, fallback: Option<&DiscordUserSummary>) -> Self {
+        let mut summary = Self {
             id: user.id.get().to_string(),
             username: user.name.clone(),
             display_name: user
@@ -284,7 +294,10 @@ impl DiscordUserSummary {
                 .avatar_url()
                 .unwrap_or_else(|| user.default_avatar_url()),
             bot: user.bot,
-        }
+        };
+
+        summary.apply_fallback(fallback);
+        summary
     }
 
     pub fn from_presence_user(user: &PresenceUser) -> Self {
@@ -296,23 +309,7 @@ impl DiscordUserSummary {
         fallback: Option<&DiscordUserSummary>,
     ) -> Self {
         if let Some(full_user) = user.to_user() {
-            let mut summary = Self::from_user(&full_user);
-
-            if let Some(fallback) = fallback {
-                let fallback_display_name = fallback.display_name.trim();
-                let fallback_username = fallback.username.trim();
-                let fallback_global_name = fallback.global_name.as_deref().map(str::trim);
-                let looks_like_guild_nick = !fallback_display_name.is_empty()
-                    && fallback_display_name != fallback.id
-                    && fallback_display_name != fallback_username
-                    && fallback_global_name != Some(fallback_display_name);
-
-                if looks_like_guild_nick {
-                    summary.display_name = fallback_display_name.to_string();
-                }
-            }
-
-            return summary;
+            return Self::from_user_with_fallback(&full_user, fallback);
         }
 
         let id = user.id.get().to_string();
@@ -352,7 +349,7 @@ impl DiscordUserSummary {
             .bot
             .unwrap_or_else(|| fallback.map(|value| value.bot).unwrap_or(false));
 
-        Self {
+        let mut summary = Self {
             id,
             username,
             display_name,
@@ -361,6 +358,55 @@ impl DiscordUserSummary {
             avatar,
             avatar_url,
             bot,
+        };
+
+        summary.apply_fallback(fallback);
+        summary
+    }
+
+    fn apply_fallback(&mut self, fallback: Option<&DiscordUserSummary>) {
+        let Some(fallback) = fallback else {
+            return;
+        };
+
+        let fallback_username = fallback.username.trim();
+        if (self.username.trim().is_empty() || self.username == self.id)
+            && !fallback_username.is_empty()
+            && fallback_username != fallback.id
+        {
+            self.username = fallback_username.to_string();
+        }
+
+        if self.global_name.is_none() {
+            self.global_name = non_empty_string(fallback.global_name.as_deref());
+        }
+
+        if self.discriminator.is_none() {
+            self.discriminator = fallback.discriminator.clone();
+        }
+
+        if self.avatar.is_none() {
+            self.avatar = fallback.avatar.clone();
+            self.avatar_url = fallback.avatar_url.clone();
+        }
+
+        let fallback_display_name = fallback.display_name.trim();
+        let has_better_fallback_display_name = !fallback_display_name.is_empty()
+            && fallback_display_name != fallback.id
+            && fallback_display_name != fallback_username;
+        let should_replace_display_name = self.display_name.trim().is_empty()
+            || self.display_name == self.id
+            || self.display_name == self.username;
+
+        if should_replace_display_name && has_better_fallback_display_name {
+            self.display_name = fallback_display_name.to_string();
+            return;
+        }
+
+        if should_replace_display_name {
+            if let Some(global_name) = self.global_name.clone() {
+                self.display_name = global_name;
+            }
         }
     }
 
