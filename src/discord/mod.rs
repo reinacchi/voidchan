@@ -192,7 +192,7 @@ impl Handler {
                 .try_get::<String, _>("extension")
                 .unwrap_or_else(|_| "bin".to_string());
             let embed = CreateEmbed::new()
-                .title("File detail")
+                .title("File Detail")
                 .field("ID", format!("`{}`", id), true)
                 .field(
                     "Name",
