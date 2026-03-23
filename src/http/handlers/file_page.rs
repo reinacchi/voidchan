@@ -1,48 +1,18 @@
-use axum::{
-    body::Body,
-    extract::{Path, State},
-    http::{HeaderMap, HeaderValue, StatusCode, header},
-    response::{Html, IntoResponse},
-};
-use sqlx::query_as;
-
 use crate::{
-    app_state::AppState,
-    error::AppError,
-    models::StoredFile,
+    app::state::AppState,
+    domain::models::StoredFile,
     utils::html::{escape_attr, escape_html},
 };
 
-pub async fn raw_file(
-    State(state): State<AppState>,
-    Path(requested_id): Path<String>,
-) -> Result<impl IntoResponse, AppError> {
-    let file = find_file(&state, &requested_id).await?;
-    serve_file(state, file, false).await
-}
-
-pub async fn download_file(
-    State(state): State<AppState>,
-    Path(requested_id): Path<String>,
-) -> Result<impl IntoResponse, AppError> {
-    let file = find_file(&state, &requested_id).await?;
-    serve_file(state, file, true).await
-}
-
-pub async fn view_file(
-    State(state): State<AppState>,
-    Path(requested_id): Path<String>,
-) -> Result<impl IntoResponse, AppError> {
-    let file = find_file_for_view(&state, &requested_id).await?;
-
-    let title = content_filename(&file);
+pub fn build_view_html(state: &AppState, file: &StoredFile) -> String {
+    let title = content_filename(file);
     let description = format!(
         "Uploaded on {}",
         file.created_at.format("%Y-%m-%d %H:%M:%S UTC")
     );
-    let raw_url = raw_route_url(&state, &file);
-    let download_url = download_route_url(&state, &file);
-    let canonical_url = view_route_url(&state, &file);
+    let raw_url = raw_route_url(state, file);
+    let download_url = download_route_url(state, file);
+    let canonical_url = view_route_url(state, file);
     let theme_colour = file
         .preferred_hex_colour
         .clone()
@@ -64,11 +34,11 @@ pub async fn view_file(
     let image_or_link = preview_markup(&file.mime_type, &escaped_raw_url, &escaped_title_attr);
     let og_type = open_graph_type(&file.mime_type);
     let twitter_card = twitter_card_type(&file.mime_type);
-    let og_image_meta_tag = open_graph_image_meta_tag(&state, &file);
-    let twitter_image_meta_tag = twitter_image_meta_tag(&state, &file);
-    let video_meta_tags = video_meta_tags(&file, &escaped_raw_url, &escaped_canonical_url);
+    let og_image_meta_tag = open_graph_image_meta_tag(state, file);
+    let twitter_image_meta_tag = twitter_image_meta_tag(state, file);
+    let video_meta_tags = video_meta_tags(file, &escaped_raw_url, &escaped_canonical_url);
 
-    let html = format!(
+    format!(
         r#"<!doctype html>
 <html lang="en">
 <head>
@@ -127,240 +97,112 @@ pub async fn view_file(
       color: #f3f4f6;
       letter-spacing: -0.02em;
     }}
-    .muted {{
-      color: #9ca3af;
-    }}
     .meta {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 12px;
-      margin: 20px 0 28px;
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      margin-bottom: 22px;
     }}
-    .meta > div {{
-      background: rgba(39, 39, 42, 0.92);
-      border: 1px solid rgba(82, 82, 91, 0.45);
-      border-radius: 16px;
-      padding: 14px 16px;
+    .meta span {{
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.16);
     }}
-    .label {{
-      display: block;
-      color: #a1a1aa;
-      font-size: 0.85rem;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }}
-    .meta strong {{
-      color: #f4f4f5;
+    .preview {{
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      overflow: hidden;
+      margin-bottom: 22px;
     }}
     .actions {{
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin: 0 0 24px;
     }}
     .button {{
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 8px;
+      min-width: 140px;
       padding: 12px 18px;
-      border-radius: 999px;
-      border: 1px solid color-mix(in srgb, var(--accent) 35%, rgba(148, 163, 184, 0.22));
-      background: rgba(39, 39, 42, 0.92);
-      color: #f8fafc;
-      font-weight: 700;
+      border-radius: 14px;
       text-decoration: none;
-      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      font-weight: 700;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }}
+    .button.primary {{
+      color: #111827;
+      background: linear-gradient(135deg, {theme_colour}, #ffffff);
+      box-shadow: 0 10px 25px color-mix(in srgb, {theme_colour} 45%, transparent);
+    }}
+    .button.secondary {{
+      color: #f8fafc;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.18);
     }}
     .button:hover {{
-      text-decoration: none;
       transform: translateY(-1px);
-      border-color: var(--accent);
-      background: color-mix(in srgb, var(--accent) 18%, rgba(39, 39, 42, 0.92));
     }}
-    .preview {{
-      background: rgba(9, 9, 11, 0.8);
-      border-radius: 20px;
-      padding: 18px;
-      border: 1px solid rgba(82, 82, 91, 0.4);
+    .footer {{
+      margin-top: 24px;
+      color: #94a3b8;
+      font-size: 0.88rem;
     }}
-    a {{
-      color: var(--accent);
-      overflow-wrap: anywhere;
-      text-decoration: none;
-    }}
-    a:hover {{
-      color: #f8fafc;
-      text-decoration: underline;
-    }}
+    a {{ color: inherit; }}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
+  <main class="wrap">
+    <section class="card">
       <h1>{title}</h1>
-      <p class="muted">{description}</p>
-
       <div class="meta">
-        <div>
-          <span class="label">Uploader</span>
-          <strong>{uploader}</strong>
-        </div>
-        <div>
-          <span class="label">Type</span>
-          <strong>{mime}</strong>
-        </div>
-        <div>
-          <span class="label">Size</span>
-          <strong>{size}</strong>
-        </div>
-        <div>
-          <span class="label">Raw URL</span>
-          <a href="{raw}">{raw}</a>
-        </div>
-      </div>
-
-      <div class="actions">
-        <a class="button" href="{download}" download>Download file</a>
-        <a class="button" href="{raw}" target="_blank" rel="noreferrer">Open raw file</a>
+        <span>Uploader: {uploader}</span>
+        <span>Type: {mime}</span>
+        <span>Size: {size}</span>
       </div>
 
       <div class="preview">
-        {image_or_link}
+        {preview}
       </div>
-    </div>
-  </div>
+
+      <div class="actions">
+        <a class="button primary" href="{raw}">Open raw</a>
+        <a class="button secondary" href="{download}" download>Download</a>
+      </div>
+
+      <p class="footer">{description}</p>
+    </section>
+  </main>
 </body>
 </html>"#,
         title = escaped_title,
-        title_attr = escaped_title_attr,
-        description = escaped_description,
+        theme_colour = escaped_theme_colour,
         description_attr = escaped_description_attr,
+        og_type = og_type,
+        title_attr = escaped_title_attr,
         canonical = escaped_canonical_url,
-        raw = escaped_raw_url,
         og_image_meta_tag = og_image_meta_tag,
-        twitter_image_meta_tag = twitter_image_meta_tag,
         video_meta_tags = video_meta_tags,
-        download = escaped_download_url,
+        twitter_card = twitter_card,
+        twitter_image_meta_tag = twitter_image_meta_tag,
         uploader = escaped_uploader,
         mime = escaped_mime,
         size = escaped_size,
-        image_or_link = image_or_link,
-        theme_colour = escaped_theme_colour,
-        og_type = og_type,
-        twitter_card = twitter_card,
-    );
-
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        header::CONTENT_TYPE,
-        HeaderValue::from_static("text/html; charset=utf-8"),
-    );
-    headers.insert(
-        header::CACHE_CONTROL,
-        HeaderValue::from_static("public, max-age=300"),
-    );
-
-    Ok((StatusCode::OK, headers, Html(html)))
-}
-
-async fn find_file(state: &AppState, requested_id: &str) -> Result<StoredFile, AppError> {
-    let file_id = requested_id
-        .split_once('.')
-        .map(|(id, _)| id)
-        .unwrap_or(requested_id);
-
-    let file: Option<StoredFile> = query_as::<_, StoredFile>(
-        r#"
-        SELECT f.id, f.original_name, f.object_key, f.mime_type, f.extension, f.size, f.nsfw, f.uploader, f.uploader_id, u.preferred_hex_colour, f.created_at
-        FROM files f
-        LEFT JOIN users u ON u.id = f.uploader_id
-        WHERE f.id = ?
-        LIMIT 1
-        "#,
+        preview = image_or_link,
+        raw = escaped_raw_url,
+        download = escaped_download_url,
+        description = escaped_description,
     )
-    .bind(file_id)
-    .fetch_optional(&state.db)
-    .await?;
-
-    file.ok_or(AppError::NotFound("File not found."))
 }
 
-async fn find_file_for_view(state: &AppState, requested_id: &str) -> Result<StoredFile, AppError> {
-    let (file_id, requested_extension) = requested_id
-        .rsplit_once('.')
-        .ok_or(AppError::NotFound("File not found."))?;
-
-    if file_id.is_empty() || requested_extension.is_empty() {
-        return Err(AppError::NotFound("File not found."));
-    }
-
-    let file = find_file(state, file_id).await?;
-
-    if requested_extension != file.extension {
-        return Err(AppError::NotFound("File not found."));
-    }
-
-    Ok(file)
-}
-
-async fn serve_file(
-    state: AppState,
-    file: StoredFile,
-    as_attachment: bool,
-) -> Result<impl IntoResponse, AppError> {
-    let object = state
-        .s3
-        .get_object()
-        .bucket(&state.config.r2_bucket)
-        .key(&file.object_key)
-        .send()
-        .await
-        .map_err(|e| AppError::Internal(format!("R2 download failed: {e}")))?;
-
-    let content_type = object
-        .content_type()
-        .map(str::to_owned)
-        .unwrap_or_else(|| file.mime_type.clone());
-
-    let bytes = object
-        .body
-        .collect()
-        .await
-        .map_err(|e| AppError::Internal(format!("Failed to read object body: {e}")))?
-        .into_bytes();
-
-    let disposition_type = if as_attachment {
-        "attachment"
-    } else {
-        "inline"
-    };
-
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        header::CONTENT_TYPE,
-        HeaderValue::from_str(&content_type)
-            .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
-    );
-    headers.insert(
-        header::CONTENT_LENGTH,
-        HeaderValue::from_str(&bytes.len().to_string())
-            .unwrap_or_else(|_| HeaderValue::from_static("0")),
-    );
-    headers.insert(
-        header::CACHE_CONTROL,
-        HeaderValue::from_static("public, max-age=31536000, immutable"),
-    );
-    headers.insert(
-        header::CONTENT_DISPOSITION,
-        HeaderValue::from_str(&format!(
-            r#"{disposition_type}; filename="{}""#,
-            content_filename(&file)
-        ))
-        .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream")),
-    );
-
-    Ok((StatusCode::OK, headers, Body::from(bytes)))
+pub fn content_filename(file: &StoredFile) -> String {
+    format!("{}.{}", file.id, file.extension)
 }
 
 fn raw_route_url(state: &AppState, file: &StoredFile) -> String {
@@ -387,10 +229,6 @@ fn view_route_url(state: &AppState, file: &StoredFile) -> String {
     )
 }
 
-fn content_filename(file: &StoredFile) -> String {
-    format!("{}.{}", file.id, file.extension)
-}
-
 fn human_file_size(size: u64) -> String {
     const UNITS: [&str; 5] = ["B", "KB", "MB", "GB", "TB"];
 
@@ -412,7 +250,6 @@ fn human_file_size(size: u64) -> String {
         format!("{value:.2} {}", UNITS[unit_index])
     }
 }
-
 
 fn preview_markup(mime_type: &str, raw_url: &str, title_attr: &str) -> String {
     if mime_type.starts_with("image/") {

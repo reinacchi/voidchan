@@ -13,13 +13,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::FromRow;
 
-use crate::presence::PrimaryGuildSummary;
+use crate::services::presence::PrimaryGuildSummary;
 use crate::{
-    app_state::AppState,
-    badges::badges_from_public_flags,
-    error::AppError,
-    models::User,
-    presence::{ActivitySummary, CachedPresence, DiscordUserSummary, spotify_image_url},
+    app::state::AppState,
+    domain::badges::badges_from_public_flags,
+    app::error::AppError,
+    domain::models::User,
+    services::presence::{ActivitySummary, CachedPresence, DiscordUserSummary, spotify_image_url},
     utils::{
         html::{escape_attr, escape_html},
         ids::is_valid_hex_colour,

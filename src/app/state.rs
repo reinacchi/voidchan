@@ -1,7 +1,7 @@
 use aws_sdk_s3::Client as S3Client;
 use sqlx::MySqlPool;
 
-use crate::{config::Config, presence::PresenceService};
+use crate::{app::config::Config, services::presence::PresenceService};
 
 #[derive(Clone)]
 pub struct AppState {
