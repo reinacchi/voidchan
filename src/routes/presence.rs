@@ -1,5 +1,7 @@
 use std::collections::{HashMap, HashSet};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64_STANDARD};
 
 use axum::{
     Json,
@@ -176,7 +178,8 @@ pub async fn presence_widget_svg(
     Query(query): Query<WidgetQuery>,
 ) -> Result<(StatusCode, HeaderMap, String), AppError> {
     let payload = load_presence_payload(&state, &discord_user_id).await?;
-    let svg = render_widget_svg(&payload, &query);
+    let image_sources = build_widget_image_sources(&payload).await;
+    let svg = render_widget_svg(&payload, &query, &image_sources);
 
     Ok(svg_response(svg))
 }
@@ -400,7 +403,90 @@ fn svg_response(svg: String) -> (StatusCode, HeaderMap, String) {
     (StatusCode::OK, headers, svg)
 }
 
-fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
+#[derive(Debug, Clone)]
+struct WidgetImageSources {
+    avatar_href: String,
+    activity_asset_href: Option<String>,
+    activity_small_asset_href: Option<String>,
+}
+
+async fn build_widget_image_sources(payload: &PresencePayload) -> WidgetImageSources {
+    let avatar_url = discord_avatar_url(&payload.presence.discord_user);
+    let activity_asset_url = widget_activity_asset_url(payload);
+    let activity_small_asset_url = widget_activity_small_asset_url(payload);
+
+    let (avatar_href, activity_asset_href, activity_small_asset_href) = tokio::join!(
+        fetch_image_data_uri(&avatar_url),
+        fetch_optional_image_data_uri(activity_asset_url.as_deref()),
+        fetch_optional_image_data_uri(activity_small_asset_url.as_deref()),
+    );
+
+    WidgetImageSources {
+        avatar_href: avatar_href.unwrap_or(avatar_url),
+        activity_asset_href: activity_asset_href.or(activity_asset_url),
+        activity_small_asset_href: activity_small_asset_href.or(activity_small_asset_url),
+    }
+}
+
+async fn fetch_optional_image_data_uri(url: Option<&str>) -> Option<String> {
+    let url = url?;
+    fetch_image_data_uri(url).await
+}
+
+async fn fetch_image_data_uri(url: &str) -> Option<String> {
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(8))
+        .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
+        .build()
+        .ok()?;
+
+    let response = client.get(url).send().await.ok()?;
+    if !response.status().is_success() {
+        return None;
+    }
+
+    let headers = response.headers().clone();
+    let bytes = response.bytes().await.ok()?;
+    if bytes.is_empty() {
+        return None;
+    }
+
+    let mime = headers
+        .get(header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.split(';').next())
+        .map(str::trim)
+        .filter(|value| value.starts_with("image/"))
+        .map(ToOwned::to_owned)
+        .or_else(|| infer_image_mime_from_url(url));
+
+    let mime = mime?;
+    Some(format!(
+        "data:{};base64,{}",
+        mime,
+        BASE64_STANDARD.encode(bytes),
+    ))
+}
+
+fn infer_image_mime_from_url(url: &str) -> Option<String> {
+    let extension = url
+        .split('?')
+        .next()
+        .and_then(|value| value.rsplit('.').next())
+        .map(|value| value.to_ascii_lowercase())?;
+
+    match extension.as_str() {
+        "png" => Some("image/png".to_string()),
+        "jpg" | "jpeg" => Some("image/jpeg".to_string()),
+        "gif" => Some("image/gif".to_string()),
+        "webp" => Some("image/webp".to_string()),
+        "svg" => Some("image/svg+xml".to_string()),
+        _ => None,
+    }
+}
+
+fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery, image_sources: &WidgetImageSources) -> String {
+
     let palette = palette(query.theme.as_deref());
     let background = query
         .accent
@@ -438,13 +524,9 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
         .map(|value| truncate(&value, 34))
         .unwrap_or_default();
 
-    let avatar_url = discord_avatar_url(&payload.presence.discord_user);
-    let activity_asset_url = widget_activity_asset_url(payload);
-    let activity_small_asset_url = widget_activity_small_asset_url(payload);
-
     let activity_name = truncate(&widget_activity_name(payload), 24);
 
-    let escaped_avatar_url = escape_attr(&avatar_url);
+    let escaped_avatar_url = escape_attr(&image_sources.avatar_href);
     let escaped_username = escape_html(&username);
     let escaped_display_name = escape_html(&display_name);
     let escaped_activity = escape_html(&activity_line);
@@ -476,7 +558,7 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
     let activity_asset_x = 18;
     let activity_asset_y = 112;
     let activity_asset_min_size = 65;
-    let activity_asset_size = if activity_asset_url.is_some() {
+    let activity_asset_size = if image_sources.activity_asset_href.is_some() {
         (elapsed_y - activity_asset_y + 4).max(activity_asset_min_size)
     } else {
         activity_asset_min_size
@@ -488,7 +570,8 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
     let small_asset_y = activity_asset_y + activity_asset_size - small_asset_size + 4;
     let small_asset_radius = 12;
 
-    let activity_asset_markup = activity_asset_url
+    let activity_asset_markup = image_sources
+        .activity_asset_href
         .as_deref()
         .map(|url| {
             format!(
@@ -514,10 +597,11 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
         })
         .unwrap_or_default();
 
-    let activity_small_asset_markup = if activity_asset_url.is_some()
-        && activity_small_asset_url.is_some()
+    let activity_small_asset_markup = if image_sources.activity_asset_href.is_some()
+        && image_sources.activity_small_asset_href.is_some()
     {
-        activity_small_asset_url
+        image_sources
+                .activity_small_asset_href
                 .as_deref()
                 .map(|url| {
                     format!(
@@ -547,7 +631,7 @@ fn render_widget_svg(payload: &PresencePayload, query: &WidgetQuery) -> String {
         String::new()
     };
 
-    let text_x = if activity_asset_url.is_some() {
+    let text_x = if image_sources.activity_asset_href.is_some() {
         activity_asset_x + activity_asset_size + 16
     } else {
         18
