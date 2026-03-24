@@ -408,3 +408,5 @@ Example:
 ```text
 https://voidchan.2rkf.fun/api/discord/123456789012345678/widget.svg?theme=dark&accent=%237289da&hide_badges=true
 ```
+
+![Presence Example](https://voidchan.2rkf.fun/api/discord/516186529547288576/widget.svg?accent=%2316101f&idle_message=「ありがとう」もう言えないけど…幸せでした。)
