@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::FromRow;
 
+use crate::domain::badges::{UNKNOWN_ICON_DARK_BASE64, UNKNOWN_ICON_LIGHT_BASE64};
 use crate::services::presence::PrimaryGuildSummary;
 use crate::{
     app::error::AppError,
@@ -429,6 +430,7 @@ async fn build_widget_image_sources(
         None
     } else {
         widget_activity_asset_url(payload, show_spotify)
+            .or_else(|| widget_unknown_activity_asset_url(payload, query, show_spotify))
     };
     let activity_small_asset_url = if query.hide_activity.unwrap_or(false) {
         None
@@ -974,6 +976,29 @@ fn widget_discord_activity(payload: &PresencePayload) -> Option<&ActivitySummary
         activity.kind != "custom"
             && activity.kind != "listening"
             && !activity.name.eq_ignore_ascii_case("spotify")
+    })
+}
+
+fn widget_unknown_activity_asset_url(
+    payload: &PresencePayload,
+    query: &WidgetQuery,
+    show_spotify: bool,
+) -> Option<String> {
+    let has_visible_activity = if widget_uses_spotify(payload, show_spotify) {
+        widget_spotify_activity(payload).is_some()
+    } else {
+        widget_discord_activity(payload).is_some()
+    };
+
+    if !has_visible_activity {
+        return None;
+    }
+
+    Some(match query.theme.as_deref() {
+        Some(theme) if theme.eq_ignore_ascii_case("light") => {
+            format!("data:image/png;base64,{}", UNKNOWN_ICON_LIGHT_BASE64)
+        }
+        _ => format!("data:image/png;base64,{}", UNKNOWN_ICON_DARK_BASE64),
     })
 }
 
