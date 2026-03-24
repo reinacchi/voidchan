@@ -15,9 +15,9 @@ use sqlx::FromRow;
 
 use crate::services::presence::PrimaryGuildSummary;
 use crate::{
+    app::error::AppError,
     app::state::AppState,
     domain::badges::badges_from_public_flags,
-    app::error::AppError,
     domain::models::User,
     services::presence::{ActivitySummary, CachedPresence, DiscordUserSummary, spotify_image_url},
     utils::{

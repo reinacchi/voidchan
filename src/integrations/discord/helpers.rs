@@ -189,10 +189,7 @@ pub fn owned_pagination_components(
     ])]
 }
 
-pub fn admin_files_pagination_row(
-    current_page: u64,
-    total_pages: u64,
-) -> Option<CreateActionRow> {
+pub fn admin_files_pagination_row(current_page: u64, total_pages: u64) -> Option<CreateActionRow> {
     if total_pages <= 1 {
         return None;
     }

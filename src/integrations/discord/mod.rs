@@ -3,11 +3,10 @@ use std::{collections::BTreeMap, sync::Arc};
 use chrono::{DateTime, Utc};
 use serenity::{
     all::{
-        ButtonStyle, CommandDataOptionValue, CommandInteraction,
-        ComponentInteraction, CreateActionRow, CreateButton,
-        CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter, CreateInteractionResponse,
-        CreateInteractionResponseMessage, GatewayIntents, Guild, GuildId, Interaction, Member,
-        OnlineStatus, Presence, Ready, User as DiscordUser,
+        ButtonStyle, CommandDataOptionValue, CommandInteraction, ComponentInteraction,
+        CreateActionRow, CreateButton, CreateEmbed, CreateEmbedAuthor, CreateEmbedFooter,
+        CreateInteractionResponse, CreateInteractionResponseMessage, GatewayIntents, Guild,
+        GuildId, Interaction, Member, OnlineStatus, Presence, Ready, User as DiscordUser,
     },
     async_trait,
     client::{Client, Context, EventHandler},
@@ -17,8 +16,8 @@ use serenity::{
 use sqlx::{Row, query, query_as};
 
 use crate::{
-    app::state::AppState,
     app::error::AppError,
+    app::state::AppState,
     domain::models::User,
     utils::ids::{generate_api_token, is_valid_hex_colour, normalise_url_mode},
 };
@@ -32,9 +31,9 @@ use commands::{
     register_command, register_success_message, token_command,
 };
 use helpers::{
-    admin_files_pagination_row, chunk_buttons, clamp_page, is_admin,
-    owned_pagination_components, parse_owned_page_custom_id, respond, respond_component,
-    respond_component_embed, respond_embed, total_pages, update_component,
+    admin_files_pagination_row, chunk_buttons, clamp_page, is_admin, owned_pagination_components,
+    parse_owned_page_custom_id, respond, respond_component, respond_component_embed, respond_embed,
+    total_pages, update_component,
 };
 
 struct ShardManagerContainer;
@@ -1424,4 +1423,3 @@ fn validate_kv_value(value: &str) -> Result<(), AppError> {
 
     Ok(())
 }
-
