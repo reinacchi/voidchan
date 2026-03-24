@@ -38,8 +38,6 @@
 
 ## What VoidChan does
 
-VoidChan offers several services that fit your needs. Here are detailed informations what each feature does:
-
 - Upload images and files through **ShareX**
 - Get short file links that open as a **preview page** or a **raw file URL**
 - Manage your account from the **Discord bot**
@@ -72,7 +70,7 @@ If you are already registered, `/register` shows your existing setup details aga
 
 ## Authenticated files uploads for ShareX
 
-VoidChan exposes a `POST /api/providers/sharex` endpoint that accepts a multipart upload with a `file` field and an API token in the `Authorization` header.
+VoidChan exposes a `POST /api/providers/sharex` endpoint that accepts a multipart upload with a `file` field and an API token in the `Authorisation` header.
 
 After creating a VoidChan account, the bot gives you a JSON config you can import directly into ShareX.
 
@@ -239,18 +237,18 @@ Options:
 - `url_mode`: choose between `v` and `u`
   - `v` = preview page URL
   - `u` = raw file URL
-- `hex_colour`: set your preferred accent color, for example `#7289da`
+- `hex_colour`: set your preferred accent colour, for example `#7289da`
 
-Your preferred hex color is used by the file preview page and presence widget styling.
+Your preferred hex colour is used by the file preview page and presence widget styling.
 
 ### `/token`
 
-Lets you either:
+It lets you either:
 
 - view your current token
 - regenerate your token
 
-If you regenerate the token, update your ShareX config immediately or uploads will stop working.
+If you regenerate the token, update your ShareX config immediately, or uploads will stop working.
 
 ### `/profile`
 
@@ -258,7 +256,7 @@ Shows your VoidChan profile, including:
 
 - account creation time
 - preferred URL mode
-- preferred hex color
+- preferred hex colour
 - total uploaded files
 - total KV entries
 
@@ -289,7 +287,7 @@ KV limits:
 
 ## Presence API
 
-VoidChan also features a Dicord Presence service which allows users to expose their Discord presence and activities. This feature is inspired by [Lanyard](https://github.com/Phineas/lanyard).
+VoidChan also features a Discord Presence service, which allows users to expose their Discord presence and activities. This feature is inspired by [Lanyard](https://github.com/Phineas/lanyard).
 
 ### Get presence
 
