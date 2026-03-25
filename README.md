@@ -7,6 +7,7 @@
 ## Table of Contents
 
 - [What VoidChan does](#what-voidchan-does)
+- [Architecture Diagram](#architecure-diagram)
 - [Get Started](#get-started)
   - [Register an account](#register-an-account)
 - [Authenticated file uploads for ShareX](#authenticated-file-uploads-for-sharex)
@@ -44,6 +45,50 @@
 - View your upload history in Discord
 - Publish your **Discord presence** as JSON or an SVG widget
 - Store custom presence-related **KV values** tied to your account
+
+## Architecture Diagram
+
+```mermaid
+flowchart TB
+    %% Users
+    User[User]
+    Viewer[Viewer / Website Visitor]
+
+    %% Main system
+    subgraph VoidChan["VoidChan Platform"]
+        Upload["File Upload (e.g. ShareX)"]
+        Storage["Secure File Storage"]
+        FileLinks["File Links & Pages"]
+        Presence["Discord Status Widget"]
+        Bot["Discord Bot"]
+        Database["Database"]
+    end
+
+    %% External services
+    subgraph External["External Services"]
+        Discord[Discord]
+    end
+
+    %% Flows
+    User -->|"uploads files"| Upload
+    Upload --> Storage
+    Storage --> Database
+
+    Viewer -->|"opens file link"| FileLinks
+    FileLinks --> Storage
+    FileLinks --> Database
+
+    User -->|"uses bot commands"| Bot
+    Bot --> Discord
+    Bot --> Database
+
+    Discord -->|"user activity/status"| Presence
+    Presence --> Database
+    Viewer -->|"views widget"| Presence
+
+    Database --> FileLinks
+    Database --> Presence
+```
 
 ## Get Started
 
