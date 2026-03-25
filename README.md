@@ -124,7 +124,17 @@ After creating a VoidChan account, the bot gives you a JSON config you can impor
 1. Copy the JSON from the bot.
 2. In ShareX, open **Custom uploader settings...**
 3. Choose **Import** → **From clipboard**
-4. Set **VoidChan** as your **Image uploader** and **File uploader** in **Destinations**
+4. Configure Destinations and Tasks
+
+Once the JSON is imported, you need to tell ShareX to actually use the new uploader and what to do with the file once it's processed.
+
+- Set the **Destinations**:
+    - In the main ShareX window, go to **Destinations** in the sidebar.
+    - Set **Image uploader** to **Custom image uploader**.
+    - Set **File uploader** to **Custom file uploader**.
+- Automate the Workflow:
+   - **After capture tasks**: Ensure **Upload image to host** is highlighted (bold/active). This triggers the upload immediately after you finish selecting your screen area.
+   - **After upload tasks**: Ensure **Copy URL to clipboard** is highlighted. This ensures the VoidChan link is ready to paste instantly without you having to manually grab it from the logs.
 
 ### Manual setup
 
