@@ -56,7 +56,7 @@ flowchart TB
 
     %% Main system
     subgraph VoidChan["VoidChan Platform"]
-        Upload["File Upload (e.g. ShareX)"]
+        Upload["File Upload (ShareX)"]
         Storage["Secure File Storage"]
         FileLinks["File Links & Pages"]
         Presence["Discord Status Widget"]
