@@ -35,7 +35,9 @@
     - [Delete one KV key](#delete-one-kv-key)
   - [SVG presence widget](#svg-presence-widget)
     - [Widget endpoint](#widget-endpoint)
-    - [Widget query parameters](#widget-query-parameters)
+    - [Widget query parameters](#widget-query-parameters) 
+- [Contributors](#contributors)
+- [License](#license)
 
 ## What VoidChan does
 
@@ -468,3 +470,13 @@ https://voidchan.2rkf.fun/api/discord/516186529547288576/widget.svg?accent=%2316
 ```
 
 [![Presence Example](https://voidchan.2rkf.fun/api/discord/516186529547288576/widget.svg?accent=%2316101f&idle_message=「ありがとう」もう言えないけど…幸せでした。)](https://discord.com/users/516186529547288576)
+
+## Contributors
+
+<a href="https://github.com/reinacchi/voidchan/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=reinacchi/voidchan" />
+</a>
+
+## License
+
+VoidChan is licensed under the [MIT License](LICENSE).
