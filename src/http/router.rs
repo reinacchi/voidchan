@@ -1,11 +1,12 @@
 use axum::{
     Router,
     body::Body,
+    extract::DefaultBodyLimit,
     http::{HeaderValue, StatusCode, header},
     response::Response,
     routing::{get, patch, post, put},
 };
-use tower_http::{cors::CorsLayer, limit::RequestBodyLimitLayer, trace::TraceLayer};
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 use crate::{
     app::state::AppState,
@@ -39,7 +40,7 @@ async fn favicon() -> Response {
     response
 }
 
-pub fn build_router(state: AppState, max_upload_bytes: usize) -> Router {
+pub fn build_router(state: AppState, _max_upload_bytes: usize) -> Router {
     Router::new()
         .route(
             "/",
@@ -74,7 +75,7 @@ pub fn build_router(state: AppState, max_upload_bytes: usize) -> Router {
         .route("/u/{id}", get(raw_file))
         .route("/download/{id}", get(download_file))
         .route("/v/{id}", get(view_file))
-        .layer(RequestBodyLimitLayer::new(max_upload_bytes))
+        .layer(DefaultBodyLimit::disable())
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .fallback(|| async {

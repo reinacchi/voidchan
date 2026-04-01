@@ -9,6 +9,7 @@ use serde::Serialize;
 pub enum AppError {
     Unauthorized(&'static str),
     BadRequest(&'static str),
+    PayloadTooLarge(&'static str),
     NotFound(&'static str),
     Internal(String),
 }
@@ -24,6 +25,7 @@ impl IntoResponse for AppError {
         let (status, message) = match self {
             AppError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, msg.to_string()),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg.to_string()),
+            AppError::PayloadTooLarge(msg) => (StatusCode::PAYLOAD_TOO_LARGE, msg.to_string()),
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg.to_string()),
             AppError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
         };
