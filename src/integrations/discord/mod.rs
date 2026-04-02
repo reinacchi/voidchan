@@ -259,7 +259,13 @@ impl Handler {
                         extension
                     ),
                     false,
-                );
+                )
+                .image(format!(
+                    "{}/u/{}.{}",
+                    self.state.config.base_url.trim_end_matches('/'),
+                    file_id,
+                    extension
+                ));
             respond_component_embed(ctx, component, true, embed).await?;
             return Ok(());
         }
